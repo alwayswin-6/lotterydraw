@@ -36,6 +36,7 @@ if (hasDirectEnvVars) {
   
   // Try file-based configuration to fill gaps
   const envFiles = [
+    path.resolve(process.cwd(), ".env"),
     path.resolve(process.cwd(), ".env.local"),
     process.env.RENDER_ENV_FILE ? path.resolve("/etc/secrets", process.env.RENDER_ENV_FILE) : "/etc/secrets/.env.local",
   ];

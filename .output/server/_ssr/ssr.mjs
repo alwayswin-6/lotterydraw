@@ -403,7 +403,11 @@ var loadedEnvPath = null;
 if (hasDirectEnvVars) console.log("✓ All required environment variables found (Render.com standard)");
 else {
 	console.log("⚠ Some environment variables missing, attempting file-based configuration");
-	const envFiles = [path.resolve(process.cwd(), ".env.local"), process.env.RENDER_ENV_FILE ? path.resolve("/etc/secrets", process.env.RENDER_ENV_FILE) : "/etc/secrets/.env.local"];
+	const envFiles = [
+		path.resolve(process.cwd(), ".env"),
+		path.resolve(process.cwd(), ".env.local"),
+		process.env.RENDER_ENV_FILE ? path.resolve("/etc/secrets", process.env.RENDER_ENV_FILE) : "/etc/secrets/.env.local"
+	];
 	console.log("Checking environment files:", envFiles);
 	for (const envFile of envFiles) if (fs.existsSync(envFile)) {
 		const result = (0, import_main.config)({

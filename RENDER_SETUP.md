@@ -122,8 +122,9 @@ SMTP_SECURE=false
 
 ## Local Development
 
-For local development, create a `.env.local` file in the project root:
+For local development, create one of the following environment files in the project root:
 
+**Option 1: .env file**
 ```env
 DATABASE_URL=postgresql://localhost:5432/your_database
 SMTP_HOST=smtp.example.com
@@ -133,6 +134,22 @@ SMTP_FROM=noreply@yourdomain.com
 SMTP_PORT=587
 SMTP_SECURE=false
 ```
+
+**Option 2: .env.local file**
+```env
+DATABASE_URL=postgresql://localhost:5432/your_database
+SMTP_HOST=smtp.example.com
+SMTP_USER=your_email@example.com
+SMTP_PASS=your_password
+SMTP_FROM=noreply@yourdomain.com
+SMTP_PORT=587
+SMTP_SECURE=false
+```
+
+The application checks for environment files in this order:
+1. `.env` (project root)
+2. `.env.local` (project root)
+3. `/etc/secrets/.env.local` (Render.com file mounts)
 
 ## Verification
 
