@@ -80,9 +80,9 @@ async function sendVerificationEmail({ email, code }) {
 				user: smtpUser,
 				pass: smtpPass
 			},
-			connectionTimeout: 15e3,
-			greetingTimeout: 1e4,
-			socketTimeout: 15e3,
+			connectionTimeout: 3e4,
+			greetingTimeout: 15e3,
+			socketTimeout: 3e4,
 			tls: {
 				servername: smtpHost,
 				rejectUnauthorized: false,
@@ -97,9 +97,18 @@ async function sendVerificationEmail({ email, code }) {
 			console.error("SMTP connection verification failed:", verifyError);
 			const errorMessage = verifyError instanceof Error ? verifyError.message : "Unknown error";
 			if (errorMessage.includes("ENETUNREACH") || errorMessage.includes("IPv6") || errorMessage.includes("2607:f8b0")) throw new Error("Network error: Cannot connect to SMTP server. This may be due to IPv6 connectivity issues. If using a VPN, try disabling it temporarily or use an SMTP provider that supports IPv4.");
-			if (errorMessage.includes("ETIMEDOUT") || errorMessage.includes("timeout")) throw new Error("Connection timeout: Cannot connect to SMTP server. If using a VPN, check your VPN settings or try connecting without VPN. The SMTP server may be blocking VPN connections.");
-			if (errorMessage.includes("ECONNREFUSED")) throw new Error("Connection refused: SMTP server is not accessible. If using a VPN, your VPN may be blocking the connection. Try disabling VPN or check SMTP server settings.");
-			if (errorMessage.includes("auth")) throw new Error("Authentication failed: SMTP credentials are incorrect. If using a VPN, ensure your VPN allows SMTP traffic on the configured port.");
+			if (errorMessage.includes("ETIMEDOUT") || errorMessage.includes("timeout")) {
+				if (smtpHost.includes("gmail")) throw new Error("Gmail connection timeout: Cannot connect to Gmail SMTP. This is common with Gmail due to security restrictions. Try: 1) Disable VPN temporarily, 2) Check if Gmail allows connections from your location, 3) Use a different SMTP provider like SendGrid or Mailgun.");
+				throw new Error("Connection timeout: Cannot connect to SMTP server. If using a VPN, check your VPN settings or try connecting without VPN. The SMTP server may be blocking VPN connections.");
+			}
+			if (errorMessage.includes("ECONNREFUSED")) {
+				if (smtpHost.includes("gmail")) throw new Error("Gmail connection refused: Gmail SMTP may be blocking connections. Ensure you're using an App Password (not your regular password) and that 2-factor authentication is enabled on your Google account.");
+				throw new Error("Connection refused: SMTP server is not accessible. If using a VPN, your VPN may be blocking the connection. Try disabling VPN or check SMTP server settings.");
+			}
+			if (errorMessage.includes("auth") || errorMessage.includes("Invalid login")) {
+				if (smtpHost.includes("gmail")) throw new Error("Gmail authentication failed: For Gmail, you must use an App Password, not your regular password. Go to Google Account > Security > 2-Step Verification > App Passwords to generate one. Also ensure 2-factor authentication is enabled.");
+				throw new Error("Authentication failed: SMTP credentials are incorrect. If using a VPN, ensure your VPN allows SMTP traffic on the configured port.");
+			}
 			throw new Error(`SMTP connection failed: ${errorMessage}`);
 		}
 		await transporter.sendMail({
