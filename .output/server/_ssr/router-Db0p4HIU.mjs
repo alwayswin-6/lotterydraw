@@ -4,7 +4,7 @@ import { c as HeadContent, d as Outlet, f as lazyRouteComponent, g as useRouter,
 import { t as Route$3 } from "../_email-DdcBAK-g.mjs";
 import { t as Route$4 } from "../_id-D3luYzWG.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-CRsURxxe.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-Db0p4HIU.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var styles_default = "/assets/styles-QLMz68S2.css";
@@ -96,26 +96,58 @@ var Route$2 = createRootRouteWithContext()({
 				name: "viewport",
 				content: "width=device-width, initial-scale=1"
 			},
-			{ title: "Linz Car Selling - Luxury Used Cars in Austria" },
+			{ title: "Linz Lottery - Win Amazing Prizes" },
 			{
 				name: "description",
-				content: "Drive your dream. Premium pre-owned vehicles in Linz, Upper Austria."
+				content: "Your chance to win incredible prizes! Join the Linz Lottery and drive away with luxury vehicles and amazing rewards."
 			},
 			{
 				property: "og:title",
-				content: "Linz Car Selling - Luxury Used Cars in Austria"
+				content: "Linz Lottery - Win Amazing Prizes"
 			},
 			{
 				property: "og:description",
-				content: "Drive your dream. Premium pre-owned vehicles in Linz."
+				content: "Your chance to win incredible prizes! Join the Linz Lottery and drive away with luxury vehicles and amazing rewards."
 			},
 			{
 				property: "og:type",
 				content: "website"
 			},
 			{
+				property: "og:url",
+				content: "https://your-domain.com"
+			},
+			{
+				property: "og:image",
+				content: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200&h=630&fit=crop"
+			},
+			{
+				property: "og:image:width",
+				content: "1200"
+			},
+			{
+				property: "og:image:height",
+				content: "630"
+			},
+			{
+				property: "og:image:alt",
+				content: "Luxury car lottery prizes"
+			},
+			{
 				name: "twitter:card",
 				content: "summary_large_image"
+			},
+			{
+				name: "twitter:title",
+				content: "Linz Lottery - Win Amazing Prizes"
+			},
+			{
+				name: "twitter:description",
+				content: "Your chance to win incredible prizes! Join the Linz Lottery and drive away with luxury vehicles and amazing rewards."
+			},
+			{
+				name: "twitter:image",
+				content: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200&h=630&fit=crop"
 			}
 		],
 		links: [

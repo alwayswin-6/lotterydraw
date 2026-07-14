@@ -77,12 +77,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Linz Car Selling - Luxury Used Cars in Austria" },
-      { name: "description", content: "Drive your dream. Premium pre-owned vehicles in Linz, Upper Austria." },
-      { property: "og:title", content: "Linz Car Selling - Luxury Used Cars in Austria" },
-      { property: "og:description", content: "Drive your dream. Premium pre-owned vehicles in Linz." },
+      { title: "Linz Lottery - Win Amazing Prizes" },
+      { name: "description", content: "Your chance to win incredible prizes! Join the Linz Lottery and drive away with luxury vehicles and amazing rewards." },
+      
+      // Open Graph tags for Discord/Facebook link previews
+      { property: "og:title", content: "Linz Lottery - Win Amazing Prizes" },
+      { property: "og:description", content: "Your chance to win incredible prizes! Join the Linz Lottery and drive away with luxury vehicles and amazing rewards." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://your-domain.com" },
+      { property: "og:image", content: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200&h=630&fit=crop" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Luxury car lottery prizes" },
+      
+      // Twitter Card tags
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Linz Lottery - Win Amazing Prizes" },
+      { name: "twitter:description", content: "Your chance to win incredible prizes! Join the Linz Lottery and drive away with luxury vehicles and amazing rewards." },
+      { name: "twitter:image", content: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200&h=630&fit=crop" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
