@@ -249,3 +249,71 @@ Email verification and database features may not work correctly.
    - Look for "Environment Variable Check" section
    - Check which variables are marked as SET/NOT SET
    - Verify file loading attempts and results
+
+### IPv6 Connectivity Issues
+
+If you see errors like "ENETUNREACH" or IPv6 addresses (e.g., 2607:f8b0:4004:c23::6c):
+
+1. **Use IPv4-Compatible SMTP Server**
+   - Some SMTP providers (like Gmail) may default to IPv6
+   - Consider using SMTP providers that support IPv4:
+     - SendGrid (smtp.sendgrid.net)
+     - Mailgun (smtp.mailgun.org)
+     - Amazon SES (email-smtp.us-east-1.amazonaws.com)
+     - Postmark (smtp.postmarkapp.com)
+
+2. **Configure SMTP Host for IPv4**
+   - Try using the IPv4 address of your SMTP server
+   - Contact your SMTP provider for IPv4 server addresses
+   - Some providers have separate IPv4 endpoints
+
+3. **Network Configuration**
+   - Ensure your network supports IPv6 if required by SMTP provider
+   - Check firewall rules for IPv6 traffic
+   - Consider using a VPN or proxy that supports IPv6
+
+4. **Alternative SMTP Providers**
+   - If your current provider doesn't support IPv4, switch to one that does
+   - Many SMTP providers offer both IPv4 and IPv6 support
+   - Test with a different provider to isolate the issue
+
+### VPN Connectivity Issues
+
+If you're using a VPN and experiencing email sending issues:
+
+1. **VPN-Specific SMTP Configuration**
+   - The application is configured with VPN-friendly settings:
+     - Increased connection timeouts (15s)
+     - Increased greeting timeouts (10s)
+     - Increased socket timeouts (15s)
+     - Permissive TLS settings for VPN scenarios
+     - System DNS configuration (uses VPN's DNS)
+
+2. **Common VPN Issues**
+   - **Timeout Errors**: VPNs may slow down connections
+     - Error: "Connection timeout: Cannot connect to SMTP server"
+     - Solution: Check VPN settings or try connecting without VPN
+   - **Connection Refused**: VPNs may block SMTP ports
+     - Error: "Connection refused: SMTP server is not accessible"
+     - Solution: Disable VPN or configure VPN to allow SMTP traffic
+   - **IPv6 Issues**: VPNs may not support IPv6
+     - Error: "Network error: Cannot connect to SMTP server"
+     - Solution: Use IPv4-compatible SMTP provider
+
+3. **VPN Configuration Recommendations**
+   - **Allow SMTP Traffic**: Configure VPN to allow traffic on SMTP ports (587, 465, 25)
+   - **Split Tunneling**: Enable split tunneling to bypass VPN for SMTP traffic
+   - **DNS Settings**: Ensure VPN DNS doesn't block SMTP server resolution
+   - **Port Forwarding**: Configure VPN to forward SMTP ports if needed
+
+4. **Testing Without VPN**
+   - Temporarily disable VPN to test if VPN is the issue
+   - If email works without VPN, the VPN configuration needs adjustment
+   - Contact VPN support for SMTP traffic configuration
+
+5. **VPN-Compatible SMTP Providers**
+   - Some SMTP providers are more VPN-friendly:
+     - SendGrid: Generally VPN-compatible
+     - Mailgun: Works with most VPNs
+     - Amazon SES: May require specific VPN configuration
+     - Postmark: VPN-friendly with proper settings

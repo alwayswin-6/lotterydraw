@@ -69,16 +69,27 @@ async function sendVerificationEmail({ email, code }) {
 				user: smtpUser,
 				pass: smtpPass
 			},
-			connectionTimeout: 1e4,
-			greetingTimeout: 5e3,
-			socketTimeout: 1e4
+			connectionTimeout: 15e3,
+			greetingTimeout: 1e4,
+			socketTimeout: 15e3,
+			tls: {
+				servername: smtpHost,
+				rejectUnauthorized: false,
+				minVersion: "TLSv1.2"
+			},
+			dns: { family: void 0 }
 		});
 		try {
 			await transporter.verify();
 			console.log("SMTP connection verified successfully");
 		} catch (verifyError) {
 			console.error("SMTP connection verification failed:", verifyError);
-			throw new Error(`SMTP connection failed: ${verifyError instanceof Error ? verifyError.message : "Unknown error"}`);
+			const errorMessage = verifyError instanceof Error ? verifyError.message : "Unknown error";
+			if (errorMessage.includes("ENETUNREACH") || errorMessage.includes("IPv6") || errorMessage.includes("2607:f8b0")) throw new Error("Network error: Cannot connect to SMTP server. This may be due to IPv6 connectivity issues. If using a VPN, try disabling it temporarily or use an SMTP provider that supports IPv4.");
+			if (errorMessage.includes("ETIMEDOUT") || errorMessage.includes("timeout")) throw new Error("Connection timeout: Cannot connect to SMTP server. If using a VPN, check your VPN settings or try connecting without VPN. The SMTP server may be blocking VPN connections.");
+			if (errorMessage.includes("ECONNREFUSED")) throw new Error("Connection refused: SMTP server is not accessible. If using a VPN, your VPN may be blocking the connection. Try disabling VPN or check SMTP server settings.");
+			if (errorMessage.includes("auth")) throw new Error("Authentication failed: SMTP credentials are incorrect. If using a VPN, ensure your VPN allows SMTP traffic on the configured port.");
+			throw new Error(`SMTP connection failed: ${errorMessage}`);
 		}
 		await transporter.sendMail({
 			from,
