@@ -657,11 +657,6 @@
       "email": "test@example.com",
       "code": "876961",
       "expiresAt": 1784023728182
-    },
-    {
-      "email": "always.win_2@outlook.com",
-      "code": "291183",
-      "expiresAt": 1784023937989
     }
   ],
   "news": [
