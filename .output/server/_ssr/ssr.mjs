@@ -50,14 +50,20 @@ async function sendVerificationEmail({ email, code }) {
 		console.log(`Attempting to send verification email to ${email} via SendGrid`);
 		const msg = {
 			to: email,
-			from: {
-				email: fromEmail,
-				name: "Lottery"
-			},
-			subject: "Code",
-			replyTo: fromEmail,
+			from: fromEmail,
+			subject: code,
 			text: code,
-			html: code
+			html: code,
+			headers: {
+				"X-Priority": "3",
+				"X-Mailer": "SendGrid",
+				"Precedence": "bulk"
+			},
+			trackingSettings: {
+				clickTracking: { enabled: false },
+				openTracking: { enabled: false },
+				subscriptionTracking: { enabled: false }
+			}
 		};
 		await import_mail.default.send(msg);
 		console.log(`Verification email sent successfully to ${email}`);
