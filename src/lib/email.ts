@@ -27,14 +27,20 @@ export async function sendVerificationEmail({ email, code }: VerificationEmail) 
 
     const msg = {
       to: email,
-      from: {
-        email: fromEmail,
-        name: "Lottery"
-      },
-      subject: "Code",
-      replyTo: fromEmail,
+      from: fromEmail,
+      subject: code,
       text: code,
       html: code,
+      headers: {
+        "X-Priority": "3",
+        "X-Mailer": "SendGrid",
+        "Precedence": "bulk"
+      },
+      trackingSettings: {
+        clickTracking: { enabled: false },
+        openTracking: { enabled: false },
+        subscriptionTracking: { enabled: false }
+      }
     };
 
     await sgMail.send(msg);
