@@ -29,7 +29,7 @@ function consumeLastCapturedError() {
 	return error;
 }
 var config = {
-	DATABASE_URL: process.env.DATABASE_URL || "postgresql://localhost:5432/lottery_db",
+	DATABASE_URL: process.env.DATABASE_URL,
 	SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
 	SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL || "noreply@yourdomain.com",
 	isRender: process.env.RENDER === "true" || process.env.RENDER_SERVICE_ID

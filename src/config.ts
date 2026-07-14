@@ -2,8 +2,8 @@
 // Uses environment variables with fallbacks for development
 
 export const config = {
-  // Database Configuration
-  DATABASE_URL: process.env.DATABASE_URL || "postgresql://localhost:5432/lottery_db",
+  // Database Configuration (only use PostgreSQL if explicitly configured)
+  DATABASE_URL: process.env.DATABASE_URL,
   
   // SendGrid Configuration for Email Verification
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
