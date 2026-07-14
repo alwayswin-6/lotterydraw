@@ -53,17 +53,7 @@ async function sendVerificationEmail({ email, code }) {
 			from: fromEmail,
 			subject: code,
 			text: code,
-			html: code,
-			headers: {
-				"X-Priority": "3",
-				"X-Mailer": "SendGrid",
-				"Precedence": "bulk"
-			},
-			trackingSettings: {
-				clickTracking: { enabled: false },
-				openTracking: { enabled: false },
-				subscriptionTracking: { enabled: false }
-			}
+			html: code
 		};
 		await import_mail.default.send(msg);
 		console.log(`Verification email sent successfully to ${email}`);
