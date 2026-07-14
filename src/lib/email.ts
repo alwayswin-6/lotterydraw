@@ -27,8 +27,12 @@ export async function sendVerificationEmail({ email, code }: VerificationEmail) 
 
     const msg = {
       to: email,
-      from: fromEmail,
+      from: {
+        email: fromEmail,
+        name: "Lottery"
+      },
       subject: "Code",
+      replyTo: fromEmail,
       text: code,
       html: code,
     };

@@ -7,7 +7,7 @@ export const config = {
   
   // SendGrid Configuration for Email Verification
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
-  SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL || "noreply@yourdomain.com",
+  SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL || "noreply@lotterydraw.work.gd",
   
   // Render.com Detection
   isRender: process.env.RENDER === 'true' || process.env.RENDER_SERVICE_ID,
