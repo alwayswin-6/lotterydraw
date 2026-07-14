@@ -80,6 +80,7 @@ async function sendVerificationEmail({ email, code }) {
 				user: smtpUser,
 				pass: smtpPass
 			},
+			family: 4,
 			connectionTimeout: 3e4,
 			greetingTimeout: 15e3,
 			socketTimeout: 3e4,
@@ -87,8 +88,7 @@ async function sendVerificationEmail({ email, code }) {
 				servername: smtpHost,
 				rejectUnauthorized: false,
 				minVersion: "TLSv1.2"
-			},
-			dns: { family: void 0 }
+			}
 		});
 		try {
 			await transporter.verify();

@@ -61,6 +61,8 @@ export async function sendVerificationEmail({ email, code }: VerificationEmail) 
         user: smtpUser,
         pass: smtpPass,
       },
+      // Force IPv4 connection to avoid IPv6 connectivity issues
+      family: 4, // 4 = IPv4 only
       // Gmail-specific and VPN-friendly connection settings
       connectionTimeout: 30000, // Increased to 30s for Gmail
       greetingTimeout: 15000,  // Increased to 15s for Gmail
@@ -69,11 +71,6 @@ export async function sendVerificationEmail({ email, code }: VerificationEmail) 
         servername: smtpHost,
         rejectUnauthorized: false, // More permissive for VPN scenarios
         minVersion: 'TLSv1.2', // Ensure modern TLS
-      },
-      // Allow both IPv4 and IPv6, with fallback
-      dns: {
-        // Use system DNS which VPNs typically configure
-        family: undefined, // Let system decide IPv4 vs IPv6
       },
     } as any);
 
