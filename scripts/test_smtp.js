@@ -1,29 +1,42 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
 (async function(){
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const smtpPort = Number(process.env.SMTP_PORT ?? 587);
-  const smtpSecure = process.env.SMTP_SECURE === 'true';
+  const apiKey = process.env.SENDGRID_API_KEY;
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL;
 
-  console.log('Using SMTP settings:', { smtpHost, smtpUser, smtpPort, smtpSecure, passSet: !!smtpPass });
+  console.log('Using SendGrid settings:', { apiKey: apiKey ? '***SET***' : 'NOT SET', fromEmail });
+
+  if (!apiKey) {
+    console.error('SENDGRID_API_KEY is not set in .env.local');
+    process.exit(1);
+  }
+
+  if (!fromEmail) {
+    console.error('SENDGRID_FROM_EMAIL is not set in .env.local');
+    process.exit(1);
+  }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpSecure,
-      auth: { user: smtpUser, pass: smtpPass },
-      tls: { rejectUnauthorized: false }
-    });
+    sgMail.setApiKey(apiKey);
+    
+    // Test by sending a simple test email
+    const testEmail = process.env.TEST_EMAIL || fromEmail;
+    
+    const msg = {
+      to: testEmail,
+      from: fromEmail,
+      subject: 'SendGrid Test Email',
+      text: 'This is a test email from your SendGrid configuration.',
+      html: '<strong>This is a test email from your SendGrid configuration.</strong>',
+    };
 
-    await transporter.verify();
-    console.log('SMTP verify succeeded');
+    console.log(`Sending test email to ${testEmail}...`);
+    await sgMail.send(msg);
+    console.log('SendGrid test email sent successfully');
   } catch (err) {
-    console.error('SMTP verify failed:', err && err.message ? err.message : err);
+    console.error('SendGrid test failed:', err && err.message ? err.message : err);
     if (err && err.response) console.error('Response:', err.response);
     process.exit(1);
   }

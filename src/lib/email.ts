@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 import { config } from "../config";
 
 interface VerificationEmail {
@@ -6,117 +6,28 @@ interface VerificationEmail {
   code: string;
 }
 
-function normalizeEnvValue(value: string) {
-  return value.trim().replace(/^\"(.+)\"$/s, "$1").replace(/^'(.*)'$/s, "$1");
-}
-
-function getRequiredConfig(name: string, value: string) {
-  if (!value) throw new Error(`${name} is not configured in embedded config`);
-  return normalizeEnvValue(value);
-}
-
-function getSmtpPort() {
-  const portValue = config.SMTP_PORT ? normalizeEnvValue(config.SMTP_PORT) : "587";
-  return Number(portValue);
-}
-
-function getSmtpSecure() {
-  if (config.SMTP_SECURE) return config.SMTP_SECURE === "true";
-  return getSmtpPort() === 465;
-}
-
 export async function sendVerificationEmail({ email, code }: VerificationEmail) {
   try {
-    const from = config.SMTP_FROM || config.SMTP_USER;
-    if (!from) throw new Error("SMTP_FROM or SMTP_USER is not configured in embedded config");
+    const apiKey = config.SENDGRID_API_KEY;
+    const fromEmail = config.SENDGRID_FROM_EMAIL;
 
-    const smtpHost = config.SMTP_HOST;
-    const smtpUser = config.SMTP_USER;
-    const smtpPass = config.SMTP_PASS;
-    const smtpPort = config.SMTP_PORT;
-    const smtpSecure = config.SMTP_SECURE;
-    
-    console.log("=== SMTP Configuration Debug ===");
-    console.log(`SMTP_HOST: ${smtpHost || 'NOT SET'}`);
-    console.log(`SMTP_USER: ${smtpUser || 'NOT SET'}`);
-    console.log(`SMTP_PASS: ${smtpPass ? '***SET***' : 'NOT SET'}`);
-    console.log(`SMTP_PORT: ${smtpPort || '587 (default)'}`);
-    console.log(`SMTP_SECURE: ${smtpSecure || 'auto'}`);
-    console.log(`SMTP_FROM: ${from}`);
+    if (!apiKey) throw new Error("SENDGRID_API_KEY is not configured in embedded config");
+    if (!fromEmail) throw new Error("SENDGRID_FROM_EMAIL is not configured in embedded config");
+
+    console.log("=== SendGrid Configuration Debug ===");
+    console.log(`SENDGRID_API_KEY: ${apiKey ? '***SET***' : 'NOT SET'}`);
+    console.log(`SENDGRID_FROM_EMAIL: ${fromEmail}`);
     console.log(`Target Email: ${email}`);
     console.log(`Verification Code: ${code}`);
     console.log("================================");
-    
-    if (!smtpHost) throw new Error("SMTP_HOST is not configured in embedded config");
-    if (!smtpUser) throw new Error("SMTP_USER is not configured in embedded config");
-    if (!smtpPass) throw new Error("SMTP_PASS is not configured in embedded config");
 
-    console.log(`Attempting to send verification email to ${email} via SMTP host: ${smtpHost}`);
+    sgMail.setApiKey(apiKey);
 
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: getSmtpPort(),
-      secure: getSmtpSecure(),
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-      // Force IPv4 connection to avoid IPv6 connectivity issues
-      family: 4, // 4 = IPv4 only
-      // Gmail-specific and VPN-friendly connection settings
-      connectionTimeout: 30000, // Increased to 30s for Gmail
-      greetingTimeout: 15000,  // Increased to 15s for Gmail
-      socketTimeout: 30000,    // Increased to 30s for Gmail
-      tls: {
-        servername: smtpHost,
-        rejectUnauthorized: false, // More permissive for VPN scenarios
-        minVersion: 'TLSv1.2', // Ensure modern TLS
-      },
-    } as any);
+    console.log(`Attempting to send verification email to ${email} via SendGrid`);
 
-    // Test connection before sending
-    try {
-      await transporter.verify();
-      console.log("SMTP connection verified successfully");
-    } catch (verifyError) {
-      console.error("SMTP connection verification failed:", verifyError);
-      const errorMessage = verifyError instanceof Error ? verifyError.message : 'Unknown error';
-      
-      // Check if it's an IPv6 connectivity error
-      if (errorMessage.includes('ENETUNREACH') || errorMessage.includes('IPv6') || errorMessage.includes('2607:f8b0')) {
-        throw new Error("Network error: Cannot connect to SMTP server. This may be due to IPv6 connectivity issues. If using a VPN, try disabling it temporarily or use an SMTP provider that supports IPv4.");
-      }
-      
-      // Check for timeout errors (common with Gmail and VPNs)
-      if (errorMessage.includes('ETIMEDOUT') || errorMessage.includes('timeout')) {
-        if (smtpHost.includes('gmail')) {
-          throw new Error("Gmail connection timeout: Cannot connect to Gmail SMTP. This is common with Gmail due to security restrictions. Try: 1) Disable VPN temporarily, 2) Check if Gmail allows connections from your location, 3) Use a different SMTP provider like SendGrid or Mailgun.");
-        }
-        throw new Error("Connection timeout: Cannot connect to SMTP server. If using a VPN, check your VPN settings or try connecting without VPN. The SMTP server may be blocking VPN connections.");
-      }
-      
-      // Check for connection refused errors
-      if (errorMessage.includes('ECONNREFUSED')) {
-        if (smtpHost.includes('gmail')) {
-          throw new Error("Gmail connection refused: Gmail SMTP may be blocking connections. Ensure you're using an App Password (not your regular password) and that 2-factor authentication is enabled on your Google account.");
-        }
-        throw new Error("Connection refused: SMTP server is not accessible. If using a VPN, your VPN may be blocking the connection. Try disabling VPN or check SMTP server settings.");
-      }
-      
-      // Check for authentication errors
-      if (errorMessage.includes('auth') || errorMessage.includes('Invalid login')) {
-        if (smtpHost.includes('gmail')) {
-          throw new Error("Gmail authentication failed: For Gmail, you must use an App Password, not your regular password. Go to Google Account > Security > 2-Step Verification > App Passwords to generate one. Also ensure 2-factor authentication is enabled.");
-        }
-        throw new Error("Authentication failed: SMTP credentials are incorrect. If using a VPN, ensure your VPN allows SMTP traffic on the configured port.");
-      }
-      
-      throw new Error(`SMTP connection failed: ${errorMessage}`);
-    }
-
-    await transporter.sendMail({
-      from,
+    const msg = {
       to: email,
+      from: fromEmail,
       subject: "🎰 Your Lucky Verification Code - Unlock Your Lottery Experience",
       text: `Your verification code is ${code}. Enter this code to complete your registration and start exploring our lottery prizes.`,
       html: `
@@ -166,22 +77,13 @@ export async function sendVerificationEmail({ email, code }: VerificationEmail) 
           </div>
         </div>
       `,
-    });
-    
+    };
+
+    await sgMail.send(msg);
     console.log(`Verification email sent successfully to ${email}`);
   } catch (error) {
     console.error(`Failed to send verification email to ${email}:`, error);
     if (error instanceof Error) {
-      // Provide more specific error messages for common issues
-      if (error.message.includes("ETIMEDOUT") || error.message.includes("timeout")) {
-        throw new Error("Email server connection timed out. Please check your SMTP settings and network connection.");
-      }
-      if (error.message.includes("ECONNREFUSED")) {
-        throw new Error("Could not connect to email server. Please check SMTP_HOST and SMTP_PORT.");
-      }
-      if (error.message.includes("auth")) {
-        throw new Error("Email authentication failed. Please check SMTP_USER and SMTP_PASS.");
-      }
       throw new Error(`Email sending failed: ${error.message}`);
     }
     throw new Error("Email sending failed due to unknown error");

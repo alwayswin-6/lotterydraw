@@ -1,11 +1,11 @@
 import { o as __toESM } from "../_runtime.mjs";
-import { t as require_nodemailer } from "../_libs/nodemailer.mjs";
+import { t as require_mail } from "../_libs/sendgrid__mail.mjs";
 import { t as Pool } from "../_libs/pg.mjs";
 import path from "node:path";
 import { Buffer } from "node:buffer";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 //#region node_modules/.nitro/vite/services/ssr/index.js
-var import_nodemailer = /* @__PURE__ */ __toESM(require_nodemailer());
+var import_mail = /* @__PURE__ */ __toESM(require_mail());
 var lastCapturedError;
 var TTL_MS = 5e3;
 function record(error) {
@@ -30,90 +30,27 @@ function consumeLastCapturedError() {
 }
 var config = {
 	DATABASE_URL: process.env.DATABASE_URL || "postgresql://localhost:5432/lottery_db",
-	SMTP_HOST: process.env.SMTP_HOST || "smtp.gmail.com",
-	SMTP_USER: process.env.SMTP_USER || "yamaas084@gmail.com",
-	SMTP_PASS: process.env.SMTP_PASS || "lybh hdhg esnv looa",
-	SMTP_FROM: process.env.SMTP_FROM || "selling <yamaas084@gmail.com>",
-	SMTP_PORT: process.env.SMTP_PORT || "465",
-	SMTP_SECURE: process.env.SMTP_SECURE || "true",
+	SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
+	SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL || "noreply@yourdomain.com",
 	isRender: process.env.RENDER === "true" || process.env.RENDER_SERVICE_ID
 };
-function normalizeEnvValue(value) {
-	return value.trim().replace(/^\"(.+)\"$/s, "$1").replace(/^'(.*)'$/s, "$1");
-}
-function getSmtpPort() {
-	const portValue = config.SMTP_PORT ? normalizeEnvValue(config.SMTP_PORT) : "587";
-	return Number(portValue);
-}
-function getSmtpSecure() {
-	if (config.SMTP_SECURE) return config.SMTP_SECURE === "true";
-	return getSmtpPort() === 465;
-}
 async function sendVerificationEmail({ email, code }) {
 	try {
-		const from = config.SMTP_FROM || config.SMTP_USER;
-		if (!from) throw new Error("SMTP_FROM or SMTP_USER is not configured in embedded config");
-		const smtpHost = config.SMTP_HOST;
-		const smtpUser = config.SMTP_USER;
-		const smtpPass = config.SMTP_PASS;
-		const smtpPort = config.SMTP_PORT;
-		const smtpSecure = config.SMTP_SECURE;
-		console.log("=== SMTP Configuration Debug ===");
-		console.log(`SMTP_HOST: ${smtpHost || "NOT SET"}`);
-		console.log(`SMTP_USER: ${smtpUser || "NOT SET"}`);
-		console.log(`SMTP_PASS: ${smtpPass ? "***SET***" : "NOT SET"}`);
-		console.log(`SMTP_PORT: ${smtpPort || "587 (default)"}`);
-		console.log(`SMTP_SECURE: ${smtpSecure || "auto"}`);
-		console.log(`SMTP_FROM: ${from}`);
+		const apiKey = config.SENDGRID_API_KEY;
+		const fromEmail = config.SENDGRID_FROM_EMAIL;
+		if (!apiKey) throw new Error("SENDGRID_API_KEY is not configured in embedded config");
+		if (!fromEmail) throw new Error("SENDGRID_FROM_EMAIL is not configured in embedded config");
+		console.log("=== SendGrid Configuration Debug ===");
+		console.log(`SENDGRID_API_KEY: ${apiKey ? "***SET***" : "NOT SET"}`);
+		console.log(`SENDGRID_FROM_EMAIL: ${fromEmail}`);
 		console.log(`Target Email: ${email}`);
 		console.log(`Verification Code: ${code}`);
 		console.log("================================");
-		if (!smtpHost) throw new Error("SMTP_HOST is not configured in embedded config");
-		if (!smtpUser) throw new Error("SMTP_USER is not configured in embedded config");
-		if (!smtpPass) throw new Error("SMTP_PASS is not configured in embedded config");
-		console.log(`Attempting to send verification email to ${email} via SMTP host: ${smtpHost}`);
-		const transporter = import_nodemailer.default.createTransport({
-			host: smtpHost,
-			port: getSmtpPort(),
-			secure: getSmtpSecure(),
-			auth: {
-				user: smtpUser,
-				pass: smtpPass
-			},
-			family: 4,
-			connectionTimeout: 3e4,
-			greetingTimeout: 15e3,
-			socketTimeout: 3e4,
-			tls: {
-				servername: smtpHost,
-				rejectUnauthorized: false,
-				minVersion: "TLSv1.2"
-			}
-		});
-		try {
-			await transporter.verify();
-			console.log("SMTP connection verified successfully");
-		} catch (verifyError) {
-			console.error("SMTP connection verification failed:", verifyError);
-			const errorMessage = verifyError instanceof Error ? verifyError.message : "Unknown error";
-			if (errorMessage.includes("ENETUNREACH") || errorMessage.includes("IPv6") || errorMessage.includes("2607:f8b0")) throw new Error("Network error: Cannot connect to SMTP server. This may be due to IPv6 connectivity issues. If using a VPN, try disabling it temporarily or use an SMTP provider that supports IPv4.");
-			if (errorMessage.includes("ETIMEDOUT") || errorMessage.includes("timeout")) {
-				if (smtpHost.includes("gmail")) throw new Error("Gmail connection timeout: Cannot connect to Gmail SMTP. This is common with Gmail due to security restrictions. Try: 1) Disable VPN temporarily, 2) Check if Gmail allows connections from your location, 3) Use a different SMTP provider like SendGrid or Mailgun.");
-				throw new Error("Connection timeout: Cannot connect to SMTP server. If using a VPN, check your VPN settings or try connecting without VPN. The SMTP server may be blocking VPN connections.");
-			}
-			if (errorMessage.includes("ECONNREFUSED")) {
-				if (smtpHost.includes("gmail")) throw new Error("Gmail connection refused: Gmail SMTP may be blocking connections. Ensure you're using an App Password (not your regular password) and that 2-factor authentication is enabled on your Google account.");
-				throw new Error("Connection refused: SMTP server is not accessible. If using a VPN, your VPN may be blocking the connection. Try disabling VPN or check SMTP server settings.");
-			}
-			if (errorMessage.includes("auth") || errorMessage.includes("Invalid login")) {
-				if (smtpHost.includes("gmail")) throw new Error("Gmail authentication failed: For Gmail, you must use an App Password, not your regular password. Go to Google Account > Security > 2-Step Verification > App Passwords to generate one. Also ensure 2-factor authentication is enabled.");
-				throw new Error("Authentication failed: SMTP credentials are incorrect. If using a VPN, ensure your VPN allows SMTP traffic on the configured port.");
-			}
-			throw new Error(`SMTP connection failed: ${errorMessage}`);
-		}
-		await transporter.sendMail({
-			from,
+		import_mail.default.setApiKey(apiKey);
+		console.log(`Attempting to send verification email to ${email} via SendGrid`);
+		const msg = {
 			to: email,
+			from: fromEmail,
 			subject: "🎰 Your Lucky Verification Code - Unlock Your Lottery Experience",
 			text: `Your verification code is ${code}. Enter this code to complete your registration and start exploring our lottery prizes.`,
 			html: `
@@ -163,16 +100,12 @@ async function sendVerificationEmail({ email, code }) {
           </div>
         </div>
       `
-		});
+		};
+		await import_mail.default.send(msg);
 		console.log(`Verification email sent successfully to ${email}`);
 	} catch (error) {
 		console.error(`Failed to send verification email to ${email}:`, error);
-		if (error instanceof Error) {
-			if (error.message.includes("ETIMEDOUT") || error.message.includes("timeout")) throw new Error("Email server connection timed out. Please check your SMTP settings and network connection.");
-			if (error.message.includes("ECONNREFUSED")) throw new Error("Could not connect to email server. Please check SMTP_HOST and SMTP_PORT.");
-			if (error.message.includes("auth")) throw new Error("Email authentication failed. Please check SMTP_USER and SMTP_PASS.");
-			throw new Error(`Email sending failed: ${error.message}`);
-		}
+		if (error instanceof Error) throw new Error(`Email sending failed: ${error.message}`);
 		throw new Error("Email sending failed due to unknown error");
 	}
 }
@@ -407,10 +340,8 @@ async function writeUploadAsset(upload) {
 console.log("=== Using Embedded Configuration ===");
 console.log(`Running on Render.com: ${config.isRender ? "YES" : "NO"}`);
 console.log(`DATABASE_URL: ${config.DATABASE_URL ? "SET" : "NOT SET"}`);
-console.log(`SMTP_HOST: ${config.SMTP_HOST ? "SET" : "NOT SET"}`);
-console.log(`SMTP_USER: ${config.SMTP_USER ? "SET" : "NOT SET"}`);
-console.log(`SMTP_PASS: ${config.SMTP_PASS ? "***SET***" : "NOT SET"}`);
-console.log(`SMTP_FROM: ${config.SMTP_FROM ? "SET" : "NOT SET"}`);
+console.log(`SENDGRID_API_KEY: ${config.SENDGRID_API_KEY ? "***SET***" : "NOT SET"}`);
+console.log(`SENDGRID_FROM_EMAIL: ${config.SENDGRID_FROM_EMAIL ? "SET" : "NOT SET"}`);
 console.log("================================");
 var chatSubscribers = /* @__PURE__ */ new Map();
 function createSseChannel(onCancel) {
@@ -525,7 +456,7 @@ var defaultAdmin = {
 	role: "admin"
 };
 async function getServerEntry() {
-	if (!serverEntryPromise) serverEntryPromise = import("./server-DxSq8IeW.mjs").then((m) => m.default ?? m);
+	if (!serverEntryPromise) serverEntryPromise = import("./server-DEM_Hxlz.mjs").then((m) => m.default ?? m);
 	return serverEntryPromise;
 }
 async function normalizeCatastrophicSsrResponse(response) {
@@ -723,15 +654,13 @@ async function handleApiRequest(request) {
 	if (!url.pathname.startsWith("/api/")) return void 0;
 	if (url.pathname === "/api/health") return jsonResponse({
 		ok: true,
-		smtpConfigured: Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
+		sendgridConfigured: Boolean(config.SENDGRID_API_KEY && config.SENDGRID_FROM_EMAIL)
 	});
 	if (url.pathname === "/api/debug-env") return jsonResponse({
 		ok: true,
 		configuration: "embedded",
-		smtpHost: config.SMTP_HOST ? "configured" : "missing",
-		smtpUser: config.SMTP_USER ? "configured" : "missing",
-		smtpPass: config.SMTP_PASS ? "configured" : "missing",
-		smtpFrom: config.SMTP_FROM ? "configured" : "missing"
+		sendgridApiKey: config.SENDGRID_API_KEY ? "configured" : "missing",
+		sendgridFromEmail: config.SENDGRID_FROM_EMAIL ? "configured" : "missing"
 	});
 	const uploadMatch = url.pathname.match(/^\/api\/uploads\/([a-z0-9-]+)$/i);
 	if (uploadMatch && request.method === "GET") {
@@ -772,7 +701,7 @@ async function handleApiRequest(request) {
 		status: "ok",
 		timestamp: (/* @__PURE__ */ new Date()).toISOString(),
 		configuration: "embedded",
-		smtpConfigured: !!(config.SMTP_HOST && config.SMTP_USER && config.SMTP_PASS),
+		sendgridConfigured: !!(config.SENDGRID_API_KEY && config.SENDGRID_FROM_EMAIL),
 		databaseConfigured: !!config.DATABASE_URL
 	});
 	if (url.pathname === "/api/send-verification-email" && request.method === "POST") {

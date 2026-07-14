@@ -12,17 +12,9 @@ services:
         fromDatabase:
           name: linz-car-selling-db
           property: connectionString
-      - key: SMTP_HOST
+      - key: SENDGRID_API_KEY
         sync: false
-      - key: SMTP_PORT
-        value: 587
-      - key: SMTP_SECURE
-        value: false
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: SMTP_FROM
+      - key: SENDGRID_FROM_EMAIL
         sync: false
 
 databases:

@@ -11,10 +11,8 @@ import { config } from "./config";
 console.log("=== Using Embedded Configuration ===");
 console.log(`Running on Render.com: ${config.isRender ? 'YES' : 'NO'}`);
 console.log(`DATABASE_URL: ${config.DATABASE_URL ? 'SET' : 'NOT SET'}`);
-console.log(`SMTP_HOST: ${config.SMTP_HOST ? 'SET' : 'NOT SET'}`);
-console.log(`SMTP_USER: ${config.SMTP_USER ? 'SET' : 'NOT SET'}`);
-console.log(`SMTP_PASS: ${config.SMTP_PASS ? '***SET***' : 'NOT SET'}`);
-console.log(`SMTP_FROM: ${config.SMTP_FROM ? 'SET' : 'NOT SET'}`);
+console.log(`SENDGRID_API_KEY: ${config.SENDGRID_API_KEY ? '***SET***' : 'NOT SET'}`);
+console.log(`SENDGRID_FROM_EMAIL: ${config.SENDGRID_FROM_EMAIL ? 'SET' : 'NOT SET'}`);
 console.log("================================");
 
 import { renderErrorPage } from "./lib/error-page";
@@ -524,18 +522,16 @@ async function handleApiRequest(request: Request): Promise<Response | undefined>
   if (!url.pathname.startsWith("/api/")) return undefined;
 
   if (url.pathname === "/api/health") {
-    const smtpConfigured = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
-    return jsonResponse({ ok: true, smtpConfigured });
+    const sendgridConfigured = Boolean(config.SENDGRID_API_KEY && config.SENDGRID_FROM_EMAIL);
+    return jsonResponse({ ok: true, sendgridConfigured });
   }
 
   if (url.pathname === "/api/debug-env") {
     return jsonResponse({
       ok: true,
       configuration: "embedded",
-      smtpHost: config.SMTP_HOST ? "configured" : "missing",
-      smtpUser: config.SMTP_USER ? "configured" : "missing",
-      smtpPass: config.SMTP_PASS ? "configured" : "missing",
-      smtpFrom: config.SMTP_FROM ? "configured" : "missing",
+      sendgridApiKey: config.SENDGRID_API_KEY ? "configured" : "missing",
+      sendgridFromEmail: config.SENDGRID_FROM_EMAIL ? "configured" : "missing",
     });
   }
 
@@ -589,7 +585,7 @@ async function handleApiRequest(request: Request): Promise<Response | undefined>
       status: "ok", 
       timestamp: new Date().toISOString(),
       configuration: "embedded",
-      smtpConfigured: !!(config.SMTP_HOST && config.SMTP_USER && config.SMTP_PASS),
+      sendgridConfigured: !!(config.SENDGRID_API_KEY && config.SENDGRID_FROM_EMAIL),
       databaseConfigured: !!config.DATABASE_URL
     });
   }
