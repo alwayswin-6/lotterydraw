@@ -28,22 +28,9 @@ export async function sendVerificationEmail({ email, code }: VerificationEmail) 
     const msg = {
       to: email,
       from: fromEmail,
-      subject: "Email Verification Code",
-      text: `Your verification code is: ${code}\n\nEnter this code to complete your registration. This code expires in 10 minutes.\n\nIf you did not request this code, please ignore this email.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
-          <p>Please verify your email address by entering the code below:</p>
-          
-          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0; border-radius: 4px;">
-            <div style="font-size: 32px; font-weight: bold; font-family: monospace; letter-spacing: 4px; color: #333;">
-              ${code}
-            </div>
-          </div>
-          
-          <p style="font-size: 12px; color: #666;">This code expires in 10 minutes.</p>
-          <p style="font-size: 12px; color: #666;">If you did not request this code, please ignore this email.</p>
-        </div>
-      `,
+      subject: "Verification Code",
+      text: `Your verification code is:\n\n${code}\n\nEnter this code to verify your email.`,
+      html: `<p>Your verification code is:</p><p style="font-size: 20px; font-weight: bold; font-family: monospace;">${code}</p><p>Enter this code to verify your email.</p>`,
     };
 
     await sgMail.send(msg);
