@@ -1,35 +1,40 @@
 import nodemailer from "nodemailer";
+import { config } from "../config";
 
 interface VerificationEmail {
   email: string;
   code: string;
 }
 
-function getRequiredEnv(name: string) {
-  const value = process.env[name];
-  if (!value) throw new Error(`${name} is not configured`);
-  return value;
+function normalizeEnvValue(value: string) {
+  return value.trim().replace(/^\"(.+)\"$/s, "$1").replace(/^'(.*)'$/s, "$1");
+}
+
+function getRequiredConfig(name: string, value: string) {
+  if (!value) throw new Error(`${name} is not configured in embedded config`);
+  return normalizeEnvValue(value);
 }
 
 function getSmtpPort() {
-  return Number(process.env.SMTP_PORT ?? 587);
+  const portValue = config.SMTP_PORT ? normalizeEnvValue(config.SMTP_PORT) : "587";
+  return Number(portValue);
 }
 
 function getSmtpSecure() {
-  if (process.env.SMTP_SECURE) return process.env.SMTP_SECURE === "true";
+  if (config.SMTP_SECURE) return config.SMTP_SECURE === "true";
   return getSmtpPort() === 465;
 }
 
 export async function sendVerificationEmail({ email, code }: VerificationEmail) {
   try {
-    const from = process.env.SMTP_FROM ?? process.env.SMTP_USER;
-    if (!from) throw new Error("SMTP_FROM or SMTP_USER is not configured");
+    const from = config.SMTP_FROM || config.SMTP_USER;
+    if (!from) throw new Error("SMTP_FROM or SMTP_USER is not configured in embedded config");
 
-    const smtpHost = process.env.SMTP_HOST;
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
-    const smtpPort = process.env.SMTP_PORT;
-    const smtpSecure = process.env.SMTP_SECURE;
+    const smtpHost = config.SMTP_HOST;
+    const smtpUser = config.SMTP_USER;
+    const smtpPass = config.SMTP_PASS;
+    const smtpPort = config.SMTP_PORT;
+    const smtpSecure = config.SMTP_SECURE;
     
     console.log("=== SMTP Configuration Debug ===");
     console.log(`SMTP_HOST: ${smtpHost || 'NOT SET'}`);
@@ -42,9 +47,9 @@ export async function sendVerificationEmail({ email, code }: VerificationEmail) 
     console.log(`Verification Code: ${code}`);
     console.log("================================");
     
-    if (!smtpHost) throw new Error("SMTP_HOST environment variable is not configured");
-    if (!smtpUser) throw new Error("SMTP_USER environment variable is not configured");
-    if (!smtpPass) throw new Error("SMTP_PASS environment variable is not configured");
+    if (!smtpHost) throw new Error("SMTP_HOST is not configured in embedded config");
+    if (!smtpUser) throw new Error("SMTP_USER is not configured in embedded config");
+    if (!smtpPass) throw new Error("SMTP_PASS is not configured in embedded config");
 
     console.log(`Attempting to send verification email to ${email} via SMTP host: ${smtpHost}`);
 

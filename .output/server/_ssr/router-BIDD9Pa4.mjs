@@ -4,10 +4,10 @@ import { c as HeadContent, d as Outlet, f as lazyRouteComponent, g as useRouter,
 import { t as Route$3 } from "../_email-DdcBAK-g.mjs";
 import { t as Route$4 } from "../_id-D3luYzWG.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-Db0p4HIU.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-BIDD9Pa4.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-QLMz68S2.css";
+var styles_default = "/assets/styles-ChOWeAbT.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {

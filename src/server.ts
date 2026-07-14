@@ -5,44 +5,16 @@ import path from "node:path";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { sendVerificationEmail } from "./lib/email";
+import { config } from "./config";
 
-// Detect if running on Render.com
-const isRender = process.env.RENDER === 'true' || Boolean(process.env.RENDER_SERVICE_ID);
-console.log(`Running on Render.com: ${isRender ? 'YES' : 'NO'}`);
-
-const requiredEnvVars = ["SMTP_HOST","SMTP_USER","SMTP_PASS","SMTP_FROM","DATABASE_URL"];
-const envVarStatus: Record<string, string> = {};
-for (const k of requiredEnvVars) {
-  envVarStatus[k] = process.env[k] ? 'SET' : 'NOT SET';
-}
-
-const hasDirectEnvVars = requiredEnvVars.every((k) => Boolean(process.env[k]));
-
-console.log("=== Environment Variable Check ===");
-for (const k of requiredEnvVars) {
-  console.log(`${k}: ${envVarStatus[k]}`);
-}
-console.log("================================");
-
-if (!hasDirectEnvVars) {
-  console.error("✗ Missing required environment variables.");
-  console.error("Missing variables:", requiredEnvVars.filter((k) => !process.env[k]));
-  if (isRender) {
-    console.error("On Render.com, set these variables in the dashboard. Do not rely on .env files.");
-  } else {
-    console.error("For local development, set these variables directly in your environment.");
-  }
-  throw new Error("Required environment variables are missing.");
-}
-
-// Final verification
-const finalStatus = requiredEnvVars.every((k) => Boolean(process.env[k]));
-console.log("=== Final Environment Status ===");
-console.log(`All required variables present: ${finalStatus ? 'YES' : 'NO'}`);
-if (!finalStatus) {
-  console.warn("Missing variables:", requiredEnvVars.filter(k => !process.env[k]));
-  console.warn("Email verification and database features may not work correctly.");
-}
+// Use embedded configuration
+console.log("=== Using Embedded Configuration ===");
+console.log(`Running on Render.com: ${config.isRender ? 'YES' : 'NO'}`);
+console.log(`DATABASE_URL: ${config.DATABASE_URL ? 'SET' : 'NOT SET'}`);
+console.log(`SMTP_HOST: ${config.SMTP_HOST ? 'SET' : 'NOT SET'}`);
+console.log(`SMTP_USER: ${config.SMTP_USER ? 'SET' : 'NOT SET'}`);
+console.log(`SMTP_PASS: ${config.SMTP_PASS ? '***SET***' : 'NOT SET'}`);
+console.log(`SMTP_FROM: ${config.SMTP_FROM ? 'SET' : 'NOT SET'}`);
 console.log("================================");
 
 import { renderErrorPage } from "./lib/error-page";
@@ -559,11 +531,11 @@ async function handleApiRequest(request: Request): Promise<Response | undefined>
   if (url.pathname === "/api/debug-env") {
     return jsonResponse({
       ok: true,
-      loadedEnvPath: loadedEnvPath ?? "none",
-      smtpHost: process.env.SMTP_HOST ? "configured" : "missing",
-      smtpUser: process.env.SMTP_USER ? "configured" : "missing",
-      smtpPass: process.env.SMTP_PASS ? "configured" : "missing",
-      smtpFrom: process.env.SMTP_FROM ? "configured" : "missing",
+      configuration: "embedded",
+      smtpHost: config.SMTP_HOST ? "configured" : "missing",
+      smtpUser: config.SMTP_USER ? "configured" : "missing",
+      smtpPass: config.SMTP_PASS ? "configured" : "missing",
+      smtpFrom: config.SMTP_FROM ? "configured" : "missing",
     });
   }
 
@@ -616,9 +588,9 @@ async function handleApiRequest(request: Request): Promise<Response | undefined>
     return jsonResponse({ 
       status: "ok", 
       timestamp: new Date().toISOString(),
-      environment: loadedEnvPath ? "file" : "system",
-      smtpConfigured: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
-      databaseConfigured: !!process.env.DATABASE_URL
+      configuration: "embedded",
+      smtpConfigured: !!(config.SMTP_HOST && config.SMTP_USER && config.SMTP_PASS),
+      databaseConfigured: !!config.DATABASE_URL
     });
   }
   

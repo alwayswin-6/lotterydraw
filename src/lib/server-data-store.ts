@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Pool } from "pg";
+import { config } from "../config";
 
 type StoreKey = "vehicles" | "users" | "activity" | "chats" | "uploads" | "anonymous-downloads" | "verification-codes" | "news";
 
@@ -37,10 +38,11 @@ const DEFAULT_STORE: StoreShape = {
 };
 
 let pool: Pool | undefined;
+
 let initialized = false;
 
 function getDatabaseUrl() {
-  return process.env.DATABASE_URL;
+  return config.DATABASE_URL;
 }
 
 function getPool() {

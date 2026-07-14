@@ -28,22 +28,36 @@ function consumeLastCapturedError() {
 	lastCapturedError = void 0;
 	return error;
 }
+var config = {
+	DATABASE_URL: process.env.DATABASE_URL || "postgresql://localhost:5432/lottery_db",
+	SMTP_HOST: process.env.SMTP_HOST || "smtp.gmail.com",
+	SMTP_USER: process.env.SMTP_USER || "yamaas084@gmail.com",
+	SMTP_PASS: process.env.SMTP_PASS || "lybh hdhg esnv looa",
+	SMTP_FROM: process.env.SMTP_FROM || "selling <yamaas084@gmail.com>",
+	SMTP_PORT: process.env.SMTP_PORT || "587",
+	SMTP_SECURE: process.env.SMTP_SECURE || "false",
+	isRender: process.env.RENDER === "true" || process.env.RENDER_SERVICE_ID
+};
+function normalizeEnvValue(value) {
+	return value.trim().replace(/^\"(.+)\"$/s, "$1").replace(/^'(.*)'$/s, "$1");
+}
 function getSmtpPort() {
-	return Number(process.env.SMTP_PORT ?? 587);
+	const portValue = config.SMTP_PORT ? normalizeEnvValue(config.SMTP_PORT) : "587";
+	return Number(portValue);
 }
 function getSmtpSecure() {
-	if (process.env.SMTP_SECURE) return process.env.SMTP_SECURE === "true";
+	if (config.SMTP_SECURE) return config.SMTP_SECURE === "true";
 	return getSmtpPort() === 465;
 }
 async function sendVerificationEmail({ email, code }) {
 	try {
-		const from = process.env.SMTP_FROM ?? process.env.SMTP_USER;
-		if (!from) throw new Error("SMTP_FROM or SMTP_USER is not configured");
-		const smtpHost = process.env.SMTP_HOST;
-		const smtpUser = process.env.SMTP_USER;
-		const smtpPass = process.env.SMTP_PASS;
-		const smtpPort = process.env.SMTP_PORT;
-		const smtpSecure = process.env.SMTP_SECURE;
+		const from = config.SMTP_FROM || config.SMTP_USER;
+		if (!from) throw new Error("SMTP_FROM or SMTP_USER is not configured in embedded config");
+		const smtpHost = config.SMTP_HOST;
+		const smtpUser = config.SMTP_USER;
+		const smtpPass = config.SMTP_PASS;
+		const smtpPort = config.SMTP_PORT;
+		const smtpSecure = config.SMTP_SECURE;
 		console.log("=== SMTP Configuration Debug ===");
 		console.log(`SMTP_HOST: ${smtpHost || "NOT SET"}`);
 		console.log(`SMTP_USER: ${smtpUser || "NOT SET"}`);
@@ -54,9 +68,9 @@ async function sendVerificationEmail({ email, code }) {
 		console.log(`Target Email: ${email}`);
 		console.log(`Verification Code: ${code}`);
 		console.log("================================");
-		if (!smtpHost) throw new Error("SMTP_HOST environment variable is not configured");
-		if (!smtpUser) throw new Error("SMTP_USER environment variable is not configured");
-		if (!smtpPass) throw new Error("SMTP_PASS environment variable is not configured");
+		if (!smtpHost) throw new Error("SMTP_HOST is not configured in embedded config");
+		if (!smtpUser) throw new Error("SMTP_USER is not configured in embedded config");
+		if (!smtpPass) throw new Error("SMTP_PASS is not configured in embedded config");
 		console.log(`Attempting to send verification email to ${email} via SMTP host: ${smtpHost}`);
 		const transporter = import_nodemailer.default.createTransport({
 			host: smtpHost,
@@ -197,7 +211,7 @@ var DEFAULT_STORE = {
 var pool;
 var initialized = false;
 function getDatabaseUrl() {
-	return process.env.DATABASE_URL;
+	return config.DATABASE_URL;
 }
 function getPool() {
 	const databaseUrl = getDatabaseUrl();
@@ -381,35 +395,13 @@ async function writeUploadAsset(upload) {
 	}
 	await writeStoreCollection("uploads", [upload, ...(await readStoreCollection("uploads")).filter((item) => item.id !== upload.id)]);
 }
-var isRender = process.env.RENDER === "true" || Boolean(process.env.RENDER_SERVICE_ID);
-console.log(`Running on Render.com: ${isRender ? "YES" : "NO"}`);
-var requiredEnvVars = [
-	"SMTP_HOST",
-	"SMTP_USER",
-	"SMTP_PASS",
-	"SMTP_FROM",
-	"DATABASE_URL"
-];
-var envVarStatus = {};
-for (const k of requiredEnvVars) envVarStatus[k] = process.env[k] ? "SET" : "NOT SET";
-var hasDirectEnvVars = requiredEnvVars.every((k) => Boolean(process.env[k]));
-console.log("=== Environment Variable Check ===");
-for (const k of requiredEnvVars) console.log(`${k}: ${envVarStatus[k]}`);
-console.log("================================");
-if (!hasDirectEnvVars) {
-	console.error("✗ Missing required environment variables.");
-	console.error("Missing variables:", requiredEnvVars.filter((k) => !process.env[k]));
-	if (isRender) console.error("On Render.com, set these variables in the dashboard. Do not rely on .env files.");
-	else console.error("For local development, set these variables directly in your environment.");
-	throw new Error("Required environment variables are missing.");
-}
-var finalStatus = requiredEnvVars.every((k) => Boolean(process.env[k]));
-console.log("=== Final Environment Status ===");
-console.log(`All required variables present: ${finalStatus ? "YES" : "NO"}`);
-if (!finalStatus) {
-	console.warn("Missing variables:", requiredEnvVars.filter((k) => !process.env[k]));
-	console.warn("Email verification and database features may not work correctly.");
-}
+console.log("=== Using Embedded Configuration ===");
+console.log(`Running on Render.com: ${config.isRender ? "YES" : "NO"}`);
+console.log(`DATABASE_URL: ${config.DATABASE_URL ? "SET" : "NOT SET"}`);
+console.log(`SMTP_HOST: ${config.SMTP_HOST ? "SET" : "NOT SET"}`);
+console.log(`SMTP_USER: ${config.SMTP_USER ? "SET" : "NOT SET"}`);
+console.log(`SMTP_PASS: ${config.SMTP_PASS ? "***SET***" : "NOT SET"}`);
+console.log(`SMTP_FROM: ${config.SMTP_FROM ? "SET" : "NOT SET"}`);
 console.log("================================");
 var chatSubscribers = /* @__PURE__ */ new Map();
 function createSseChannel(onCancel) {
@@ -524,7 +516,7 @@ var defaultAdmin = {
 	role: "admin"
 };
 async function getServerEntry() {
-	if (!serverEntryPromise) serverEntryPromise = import("./server-B1pv-KSd.mjs").then((m) => m.default ?? m);
+	if (!serverEntryPromise) serverEntryPromise = import("./server-DxSq8IeW.mjs").then((m) => m.default ?? m);
 	return serverEntryPromise;
 }
 async function normalizeCatastrophicSsrResponse(response) {
@@ -726,11 +718,11 @@ async function handleApiRequest(request) {
 	});
 	if (url.pathname === "/api/debug-env") return jsonResponse({
 		ok: true,
-		loadedEnvPath: loadedEnvPath ?? "none",
-		smtpHost: process.env.SMTP_HOST ? "configured" : "missing",
-		smtpUser: process.env.SMTP_USER ? "configured" : "missing",
-		smtpPass: process.env.SMTP_PASS ? "configured" : "missing",
-		smtpFrom: process.env.SMTP_FROM ? "configured" : "missing"
+		configuration: "embedded",
+		smtpHost: config.SMTP_HOST ? "configured" : "missing",
+		smtpUser: config.SMTP_USER ? "configured" : "missing",
+		smtpPass: config.SMTP_PASS ? "configured" : "missing",
+		smtpFrom: config.SMTP_FROM ? "configured" : "missing"
 	});
 	const uploadMatch = url.pathname.match(/^\/api\/uploads\/([a-z0-9-]+)$/i);
 	if (uploadMatch && request.method === "GET") {
@@ -770,9 +762,9 @@ async function handleApiRequest(request) {
 	if (url.pathname === "/health" && request.method === "GET") return jsonResponse({
 		status: "ok",
 		timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-		environment: loadedEnvPath ? "file" : "system",
-		smtpConfigured: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
-		databaseConfigured: !!process.env.DATABASE_URL
+		configuration: "embedded",
+		smtpConfigured: !!(config.SMTP_HOST && config.SMTP_USER && config.SMTP_PASS),
+		databaseConfigured: !!config.DATABASE_URL
 	});
 	if (url.pathname === "/api/send-verification-email" && request.method === "POST") {
 		console.log("=== VERIFICATION EMAIL ENDPOINT REACHED ===");
