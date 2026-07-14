@@ -8,40 +8,84 @@ import path from "node:path";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { sendVerificationEmail } from "./lib/email";
 
+// Detect if running on Render.com
+const isRender = process.env.RENDER === 'true' || process.env.RENDER_SERVICE_ID;
+console.log(`Running on Render.com: ${isRender ? 'YES' : 'NO'}`);
+
 // Check for direct environment variables first (Render.com standard approach)
 const requiredEnvVars = ["SMTP_HOST","SMTP_USER","SMTP_PASS","SMTP_FROM","DATABASE_URL"];
+const envVarStatus: Record<string, string> = {};
+for (const k of requiredEnvVars) {
+  envVarStatus[k] = process.env[k] ? 'SET' : 'NOT SET';
+}
+
 const hasDirectEnvVars = requiredEnvVars.every((k) => Boolean(process.env[k]));
 
+console.log("=== Environment Variable Check ===");
+for (const k of requiredEnvVars) {
+  console.log(`${k}: ${envVarStatus[k]}`);
+}
+console.log("================================");
+
+let loadedEnvPath: string | null = null;
+
 if (hasDirectEnvVars) {
-  console.log("Using direct environment variables (Render.com standard)");
-  for (const k of ["SMTP_HOST","SMTP_USER","SMTP_PASS","SMTP_FROM","DATABASE_URL"]) {
-    console.log(`${k}: ${process.env[k] ? 'SET' : 'NOT SET'}`);
-  }
+  console.log("✓ All required environment variables found (Render.com standard)");
 } else {
-  // If some variables are present but not all, attempt to load file-based env to fill gaps
+  console.log("⚠ Some environment variables missing, attempting file-based configuration");
+  
+  // Try file-based configuration to fill gaps
   const envFiles = [
     path.resolve(process.cwd(), ".env.local"),
     process.env.RENDER_ENV_FILE ? path.resolve("/etc/secrets", process.env.RENDER_ENV_FILE) : "/etc/secrets/.env.local",
   ];
   console.log("Checking environment files:", envFiles);
   
-  let loadedEnvPath: string | null = null;
   for (const envFile of envFiles) {
     if (fs.existsSync(envFile)) {
       const result = dotenvConfig({ path: envFile, override: false });
       if (result.parsed) {
         loadedEnvPath = envFile;
-        console.log(`Loaded environment from ${envFile}`);
+        console.log(`✓ Loaded environment from ${envFile}`);
+        // Log which variables were loaded
+        for (const k of requiredEnvVars) {
+          if (result.parsed[k]) {
+            console.log(`  - ${k}: loaded from file`);
+          }
+        }
         break;
       }
     }
   }
 
   if (!loadedEnvPath) {
-    console.warn("Warning: No environment file found and direct environment variables are incomplete.");
-    console.warn("SMTP and database features may not work. On Render.com, set variables in the dashboard or upload a secrets file and set RENDER_ENV_FILE.");
+    console.warn("✗ No environment file found and direct environment variables are incomplete.");
+    console.warn("Missing variables:", requiredEnvVars.filter(k => !process.env[k]));
+    if (isRender) {
+      console.warn("On Render.com, set variables in the dashboard (recommended) or upload a secrets file and set RENDER_ENV_FILE.");
+    } else {
+      console.warn("For local development, create a .env.local file with the required variables.");
+    }
+  } else {
+    // After loading file, check again if all variables are now present
+    const finalCheck = requiredEnvVars.every((k) => Boolean(process.env[k]));
+    if (finalCheck) {
+      console.log("✓ All required variables now present after file loading");
+    } else {
+      console.warn("⚠ Still missing variables after file loading:", requiredEnvVars.filter(k => !process.env[k]));
+    }
   }
 }
+
+// Final verification
+const finalStatus = requiredEnvVars.every((k) => Boolean(process.env[k]));
+console.log("=== Final Environment Status ===");
+console.log(`All required variables present: ${finalStatus ? 'YES' : 'NO'}`);
+if (!finalStatus) {
+  console.warn("Missing variables:", requiredEnvVars.filter(k => !process.env[k]));
+  console.warn("Email verification and database features may not work correctly.");
+}
+console.log("================================");
 
 import { renderErrorPage } from "./lib/error-page";
 import {

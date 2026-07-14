@@ -32,11 +32,11 @@ export async function sendVerificationEmail({ email, code }: VerificationEmail) 
     const smtpSecure = process.env.SMTP_SECURE;
     
     console.log("=== SMTP Configuration Debug ===");
-    console.log(`SMTP_HOST: ${smtpHost}`);
-    console.log(`SMTP_USER: ${smtpUser}`);
+    console.log(`SMTP_HOST: ${smtpHost || 'NOT SET'}`);
+    console.log(`SMTP_USER: ${smtpUser || 'NOT SET'}`);
     console.log(`SMTP_PASS: ${smtpPass ? '***SET***' : 'NOT SET'}`);
-    console.log(`SMTP_PORT: ${smtpPort}`);
-    console.log(`SMTP_SECURE: ${smtpSecure}`);
+    console.log(`SMTP_PORT: ${smtpPort || '587 (default)'}`);
+    console.log(`SMTP_SECURE: ${smtpSecure || 'auto'}`);
     console.log(`SMTP_FROM: ${from}`);
     console.log(`Target Email: ${email}`);
     console.log(`Verification Code: ${code}`);
@@ -56,7 +56,20 @@ export async function sendVerificationEmail({ email, code }: VerificationEmail) 
         user: smtpUser,
         pass: smtpPass,
       },
+      // Add connection timeout and retry options
+      connectionTimeout: 10000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000,
     });
+
+    // Test connection before sending
+    try {
+      await transporter.verify();
+      console.log("SMTP connection verified successfully");
+    } catch (verifyError) {
+      console.error("SMTP connection verification failed:", verifyError);
+      throw new Error(`SMTP connection failed: ${verifyError instanceof Error ? verifyError.message : 'Unknown error'}`);
+    }
 
     await transporter.sendMail({
       from,
@@ -116,6 +129,16 @@ export async function sendVerificationEmail({ email, code }: VerificationEmail) 
   } catch (error) {
     console.error(`Failed to send verification email to ${email}:`, error);
     if (error instanceof Error) {
+      // Provide more specific error messages for common issues
+      if (error.message.includes("ETIMEDOUT") || error.message.includes("timeout")) {
+        throw new Error("Email server connection timed out. Please check your SMTP settings and network connection.");
+      }
+      if (error.message.includes("ECONNREFUSED")) {
+        throw new Error("Could not connect to email server. Please check SMTP_HOST and SMTP_PORT.");
+      }
+      if (error.message.includes("auth")) {
+        throw new Error("Email authentication failed. Please check SMTP_USER and SMTP_PASS.");
+      }
       throw new Error(`Email sending failed: ${error.message}`);
     }
     throw new Error("Email sending failed due to unknown error");

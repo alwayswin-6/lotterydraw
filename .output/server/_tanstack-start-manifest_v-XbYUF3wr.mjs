@@ -1,4 +1,4 @@
-//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-Cx1sEM6E.js
+//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-XbYUF3wr.js
 var tsrStartManifest = () => ({ routes: {
 	__root__: {
 		filePath: "C:/Users/water/Documents/Codex/2026-07-08/hi/outputs/src/routes/__root.tsx",
@@ -8,21 +8,21 @@ var tsrStartManifest = () => ({ routes: {
 			"/vehicles/$id"
 		],
 		preloads: [
-			"/assets/index-CP5czYka.js",
+			"/assets/index-oJhbtmoJ.js",
 			"/assets/rolldown-runtime-CNC7AqOf.js",
 			"/assets/jsx-runtime-CaR_m4Xc.js"
 		],
 		scripts: [{ attrs: {
 			type: "module",
 			async: !0,
-			src: "/assets/index-CP5czYka.js"
+			src: "/assets/index-oJhbtmoJ.js"
 		} }]
 	},
 	"/": {
 		filePath: "C:/Users/water/Documents/Codex/2026-07-08/hi/outputs/src/routes/index.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/routes-C5F_qY-9.js",
+			"/assets/routes-QeG554nC.js",
 			"/assets/proxy-BPUov0s-.js",
 			"/assets/api-D0_P4wlt.js"
 		]
@@ -31,7 +31,7 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "C:/Users/water/Documents/Codex/2026-07-08/hi/outputs/src/routes/admin.tsx",
 		children: ["/admin/users/$email"],
 		preloads: [
-			"/assets/admin-DKnzk0MZ.js",
+			"/assets/admin-CitXaOjN.js",
 			"/assets/proxy-BPUov0s-.js",
 			"/assets/api-D0_P4wlt.js"
 		]
@@ -39,12 +39,12 @@ var tsrStartManifest = () => ({ routes: {
 	"/vehicles/$id": {
 		filePath: "C:/Users/water/Documents/Codex/2026-07-08/hi/outputs/src/routes/vehicles/$id.tsx",
 		children: void 0,
-		preloads: ["/assets/_id-wcNaGuLK.js", "/assets/api-D0_P4wlt.js"]
+		preloads: ["/assets/_id-DZmqhyae.js", "/assets/api-D0_P4wlt.js"]
 	},
 	"/admin/users/$email": {
 		filePath: "C:/Users/water/Documents/Codex/2026-07-08/hi/outputs/src/routes/admin/users/$email.tsx",
 		children: void 0,
-		preloads: ["/assets/_email-B2O0lipk.js"]
+		preloads: ["/assets/_email-DflXN9em.js"]
 	}
 } });
 //#endregion

@@ -538,7 +538,8 @@ function AuthDialog({
       setStep("verify");
     } catch (error) {
       console.error(error);
-      setError("We could not send the verification email. Please check the email address or try again.");
+      const errorMessage = error instanceof Error ? error.message : "We could not send the verification email. Please check the email address or try again.";
+      setError(errorMessage);
     } finally {
       setSendingVerification(false);
     }

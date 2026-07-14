@@ -2,7 +2,7 @@ import { o as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { n as apiSend, t as apiGet } from "./api-fWyQh8tb.mjs";
 import { a as useMotionValue, i as useTransform, n as animate, o as motion, r as useReducedMotion, t as useInView } from "../_libs/framer-motion.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-3qaPIwKv.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-Dmph24TR.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var lotteryPrizes = [
@@ -483,7 +483,8 @@ function AuthDialog({ initialMode, onClose, onAuthComplete }) {
 			setStep("verify");
 		} catch (error) {
 			console.error(error);
-			setError("We could not send the verification email. Please check the email address or try again.");
+			const errorMessage = error instanceof Error ? error.message : "We could not send the verification email. Please check the email address or try again.";
+			setError(errorMessage);
 		} finally {
 			setSendingVerification(false);
 		}

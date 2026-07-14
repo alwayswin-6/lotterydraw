@@ -48,11 +48,11 @@ async function sendVerificationEmail({ email, code }) {
 		const smtpPort = process.env.SMTP_PORT;
 		const smtpSecure = process.env.SMTP_SECURE;
 		console.log("=== SMTP Configuration Debug ===");
-		console.log(`SMTP_HOST: ${smtpHost}`);
-		console.log(`SMTP_USER: ${smtpUser}`);
+		console.log(`SMTP_HOST: ${smtpHost || "NOT SET"}`);
+		console.log(`SMTP_USER: ${smtpUser || "NOT SET"}`);
 		console.log(`SMTP_PASS: ${smtpPass ? "***SET***" : "NOT SET"}`);
-		console.log(`SMTP_PORT: ${smtpPort}`);
-		console.log(`SMTP_SECURE: ${smtpSecure}`);
+		console.log(`SMTP_PORT: ${smtpPort || "587 (default)"}`);
+		console.log(`SMTP_SECURE: ${smtpSecure || "auto"}`);
 		console.log(`SMTP_FROM: ${from}`);
 		console.log(`Target Email: ${email}`);
 		console.log(`Verification Code: ${code}`);
@@ -61,15 +61,26 @@ async function sendVerificationEmail({ email, code }) {
 		if (!smtpUser) throw new Error("SMTP_USER environment variable is not configured");
 		if (!smtpPass) throw new Error("SMTP_PASS environment variable is not configured");
 		console.log(`Attempting to send verification email to ${email} via SMTP host: ${smtpHost}`);
-		await import_nodemailer.default.createTransport({
+		const transporter = import_nodemailer.default.createTransport({
 			host: smtpHost,
 			port: getSmtpPort(),
 			secure: getSmtpSecure(),
 			auth: {
 				user: smtpUser,
 				pass: smtpPass
-			}
-		}).sendMail({
+			},
+			connectionTimeout: 1e4,
+			greetingTimeout: 5e3,
+			socketTimeout: 1e4
+		});
+		try {
+			await transporter.verify();
+			console.log("SMTP connection verified successfully");
+		} catch (verifyError) {
+			console.error("SMTP connection verification failed:", verifyError);
+			throw new Error(`SMTP connection failed: ${verifyError instanceof Error ? verifyError.message : "Unknown error"}`);
+		}
+		await transporter.sendMail({
 			from,
 			to: email,
 			subject: "🎰 Your Lucky Verification Code - Unlock Your Lottery Experience",
@@ -125,7 +136,12 @@ async function sendVerificationEmail({ email, code }) {
 		console.log(`Verification email sent successfully to ${email}`);
 	} catch (error) {
 		console.error(`Failed to send verification email to ${email}:`, error);
-		if (error instanceof Error) throw new Error(`Email sending failed: ${error.message}`);
+		if (error instanceof Error) {
+			if (error.message.includes("ETIMEDOUT") || error.message.includes("timeout")) throw new Error("Email server connection timed out. Please check your SMTP settings and network connection.");
+			if (error.message.includes("ECONNREFUSED")) throw new Error("Could not connect to email server. Please check SMTP_HOST and SMTP_PORT.");
+			if (error.message.includes("auth")) throw new Error("Email authentication failed. Please check SMTP_USER and SMTP_PASS.");
+			throw new Error(`Email sending failed: ${error.message}`);
+		}
 		throw new Error("Email sending failed due to unknown error");
 	}
 }
@@ -357,40 +373,55 @@ async function writeUploadAsset(upload) {
 	}
 	await writeStoreCollection("uploads", [upload, ...(await readStoreCollection("uploads")).filter((item) => item.id !== upload.id)]);
 }
-if ([
+var isRender = process.env.RENDER === "true" || process.env.RENDER_SERVICE_ID;
+console.log(`Running on Render.com: ${isRender ? "YES" : "NO"}`);
+var requiredEnvVars = [
 	"SMTP_HOST",
 	"SMTP_USER",
 	"SMTP_PASS",
 	"SMTP_FROM",
 	"DATABASE_URL"
-].every((k) => Boolean(process.env[k]))) {
-	console.log("Using direct environment variables (Render.com standard)");
-	for (const k of [
-		"SMTP_HOST",
-		"SMTP_USER",
-		"SMTP_PASS",
-		"SMTP_FROM",
-		"DATABASE_URL"
-	]) console.log(`${k}: ${process.env[k] ? "SET" : "NOT SET"}`);
-} else {
+];
+var envVarStatus = {};
+for (const k of requiredEnvVars) envVarStatus[k] = process.env[k] ? "SET" : "NOT SET";
+var hasDirectEnvVars = requiredEnvVars.every((k) => Boolean(process.env[k]));
+console.log("=== Environment Variable Check ===");
+for (const k of requiredEnvVars) console.log(`${k}: ${envVarStatus[k]}`);
+console.log("================================");
+var loadedEnvPath = null;
+if (hasDirectEnvVars) console.log("✓ All required environment variables found (Render.com standard)");
+else {
+	console.log("⚠ Some environment variables missing, attempting file-based configuration");
 	const envFiles = [path.resolve(process.cwd(), ".env.local"), process.env.RENDER_ENV_FILE ? path.resolve("/etc/secrets", process.env.RENDER_ENV_FILE) : "/etc/secrets/.env.local"];
 	console.log("Checking environment files:", envFiles);
-	let loadedEnvPath = null;
 	for (const envFile of envFiles) if (fs.existsSync(envFile)) {
-		if ((0, import_main.config)({
+		const result = (0, import_main.config)({
 			path: envFile,
 			override: false
-		}).parsed) {
+		});
+		if (result.parsed) {
 			loadedEnvPath = envFile;
-			console.log(`Loaded environment from ${envFile}`);
+			console.log(`✓ Loaded environment from ${envFile}`);
+			for (const k of requiredEnvVars) if (result.parsed[k]) console.log(`  - ${k}: loaded from file`);
 			break;
 		}
 	}
 	if (!loadedEnvPath) {
-		console.warn("Warning: No environment file found and direct environment variables are incomplete.");
-		console.warn("SMTP and database features may not work. On Render.com, set variables in the dashboard or upload a secrets file and set RENDER_ENV_FILE.");
-	}
+		console.warn("✗ No environment file found and direct environment variables are incomplete.");
+		console.warn("Missing variables:", requiredEnvVars.filter((k) => !process.env[k]));
+		if (isRender) console.warn("On Render.com, set variables in the dashboard (recommended) or upload a secrets file and set RENDER_ENV_FILE.");
+		else console.warn("For local development, create a .env.local file with the required variables.");
+	} else if (requiredEnvVars.every((k) => Boolean(process.env[k]))) console.log("✓ All required variables now present after file loading");
+	else console.warn("⚠ Still missing variables after file loading:", requiredEnvVars.filter((k) => !process.env[k]));
 }
+var finalStatus = requiredEnvVars.every((k) => Boolean(process.env[k]));
+console.log("=== Final Environment Status ===");
+console.log(`All required variables present: ${finalStatus ? "YES" : "NO"}`);
+if (!finalStatus) {
+	console.warn("Missing variables:", requiredEnvVars.filter((k) => !process.env[k]));
+	console.warn("Email verification and database features may not work correctly.");
+}
+console.log("================================");
 var chatSubscribers = /* @__PURE__ */ new Map();
 function createSseChannel(onCancel) {
 	let controller = null;
@@ -504,7 +535,7 @@ var defaultAdmin = {
 	role: "admin"
 };
 async function getServerEntry() {
-	if (!serverEntryPromise) serverEntryPromise = import("./server-BMhSRkWq.mjs").then((m) => m.default ?? m);
+	if (!serverEntryPromise) serverEntryPromise = import("./server-zOIG6V7U.mjs").then((m) => m.default ?? m);
 	return serverEntryPromise;
 }
 async function normalizeCatastrophicSsrResponse(response) {
