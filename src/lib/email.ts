@@ -28,9 +28,9 @@ export async function sendVerificationEmail({ email, code }: VerificationEmail) 
     const msg = {
       to: email,
       from: fromEmail,
-      subject: "Verification Code",
-      text: `Your verification code is:\n\n${code}\n\nEnter this code to verify your email.`,
-      html: `<p>Your verification code is:</p><p style="font-size: 20px; font-weight: bold; font-family: monospace;">${code}</p><p>Enter this code to verify your email.</p>`,
+      subject: "Code",
+      text: code,
+      html: code,
     };
 
     await sgMail.send(msg);
