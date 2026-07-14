@@ -34,8 +34,8 @@ var config = {
 	SMTP_USER: process.env.SMTP_USER || "yamaas084@gmail.com",
 	SMTP_PASS: process.env.SMTP_PASS || "lybh hdhg esnv looa",
 	SMTP_FROM: process.env.SMTP_FROM || "selling <yamaas084@gmail.com>",
-	SMTP_PORT: process.env.SMTP_PORT || "587",
-	SMTP_SECURE: process.env.SMTP_SECURE || "false",
+	SMTP_PORT: process.env.SMTP_PORT || "465",
+	SMTP_SECURE: process.env.SMTP_SECURE || "true",
 	isRender: process.env.RENDER === "true" || process.env.RENDER_SERVICE_ID
 };
 function normalizeEnvValue(value) {
