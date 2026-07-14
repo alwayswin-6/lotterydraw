@@ -1,18 +1,15 @@
-import { config as dotenvConfig } from "dotenv";
 import "./lib/error-capture";
 
 import { Buffer } from "node:buffer";
-import fs from "node:fs";
 import path from "node:path";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { sendVerificationEmail } from "./lib/email";
 
 // Detect if running on Render.com
-const isRender = process.env.RENDER === 'true' || process.env.RENDER_SERVICE_ID;
+const isRender = process.env.RENDER === 'true' || Boolean(process.env.RENDER_SERVICE_ID);
 console.log(`Running on Render.com: ${isRender ? 'YES' : 'NO'}`);
 
-// Check for direct environment variables first (Render.com standard approach)
 const requiredEnvVars = ["SMTP_HOST","SMTP_USER","SMTP_PASS","SMTP_FROM","DATABASE_URL"];
 const envVarStatus: Record<string, string> = {};
 for (const k of requiredEnvVars) {
@@ -27,55 +24,15 @@ for (const k of requiredEnvVars) {
 }
 console.log("================================");
 
-let loadedEnvPath: string | null = null;
-
-if (hasDirectEnvVars) {
-  console.log("✓ All required environment variables found (Render.com standard)");
-} else {
-  console.log("⚠ Some environment variables missing, attempting file-based configuration");
-  
-  // Try file-based configuration to fill gaps
-  const envFiles = [
-    path.resolve(process.cwd(), ".env"),
-    path.resolve(process.cwd(), ".env.local"),
-    process.env.RENDER_ENV_FILE ? path.resolve("/etc/secrets", process.env.RENDER_ENV_FILE) : "/etc/secrets/.env.local",
-  ];
-  console.log("Checking environment files:", envFiles);
-  
-  for (const envFile of envFiles) {
-    if (fs.existsSync(envFile)) {
-      const result = dotenvConfig({ path: envFile, override: false });
-      if (result.parsed) {
-        loadedEnvPath = envFile;
-        console.log(`✓ Loaded environment from ${envFile}`);
-        // Log which variables were loaded
-        for (const k of requiredEnvVars) {
-          if (result.parsed[k]) {
-            console.log(`  - ${k}: loaded from file`);
-          }
-        }
-        break;
-      }
-    }
-  }
-
-  if (!loadedEnvPath) {
-    console.warn("✗ No environment file found and direct environment variables are incomplete.");
-    console.warn("Missing variables:", requiredEnvVars.filter(k => !process.env[k]));
-    if (isRender) {
-      console.warn("On Render.com, set variables in the dashboard (recommended) or upload a secrets file and set RENDER_ENV_FILE.");
-    } else {
-      console.warn("For local development, create a .env.local file with the required variables.");
-    }
+if (!hasDirectEnvVars) {
+  console.error("✗ Missing required environment variables.");
+  console.error("Missing variables:", requiredEnvVars.filter((k) => !process.env[k]));
+  if (isRender) {
+    console.error("On Render.com, set these variables in the dashboard. Do not rely on .env files.");
   } else {
-    // After loading file, check again if all variables are now present
-    const finalCheck = requiredEnvVars.every((k) => Boolean(process.env[k]));
-    if (finalCheck) {
-      console.log("✓ All required variables now present after file loading");
-    } else {
-      console.warn("⚠ Still missing variables after file loading:", requiredEnvVars.filter(k => !process.env[k]));
-    }
+    console.error("For local development, set these variables directly in your environment.");
   }
+  throw new Error("Required environment variables are missing.");
 }
 
 // Final verification

@@ -1,13 +1,10 @@
 import { o as __toESM } from "../_runtime.mjs";
-import { t as require_main } from "../_libs/dotenv.mjs";
 import { t as require_nodemailer } from "../_libs/nodemailer.mjs";
 import { t as Pool } from "../_libs/pg.mjs";
-import fs from "node:fs";
 import path from "node:path";
 import { Buffer } from "node:buffer";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 //#region node_modules/.nitro/vite/services/ssr/index.js
-var import_main = require_main();
 var import_nodemailer = /* @__PURE__ */ __toESM(require_nodemailer());
 var lastCapturedError;
 var TTL_MS = 5e3;
@@ -384,7 +381,7 @@ async function writeUploadAsset(upload) {
 	}
 	await writeStoreCollection("uploads", [upload, ...(await readStoreCollection("uploads")).filter((item) => item.id !== upload.id)]);
 }
-var isRender = process.env.RENDER === "true" || process.env.RENDER_SERVICE_ID;
+var isRender = process.env.RENDER === "true" || Boolean(process.env.RENDER_SERVICE_ID);
 console.log(`Running on Render.com: ${isRender ? "YES" : "NO"}`);
 var requiredEnvVars = [
 	"SMTP_HOST",
@@ -399,35 +396,12 @@ var hasDirectEnvVars = requiredEnvVars.every((k) => Boolean(process.env[k]));
 console.log("=== Environment Variable Check ===");
 for (const k of requiredEnvVars) console.log(`${k}: ${envVarStatus[k]}`);
 console.log("================================");
-var loadedEnvPath = null;
-if (hasDirectEnvVars) console.log("✓ All required environment variables found (Render.com standard)");
-else {
-	console.log("⚠ Some environment variables missing, attempting file-based configuration");
-	const envFiles = [
-		path.resolve(process.cwd(), ".env"),
-		path.resolve(process.cwd(), ".env.local"),
-		process.env.RENDER_ENV_FILE ? path.resolve("/etc/secrets", process.env.RENDER_ENV_FILE) : "/etc/secrets/.env.local"
-	];
-	console.log("Checking environment files:", envFiles);
-	for (const envFile of envFiles) if (fs.existsSync(envFile)) {
-		const result = (0, import_main.config)({
-			path: envFile,
-			override: false
-		});
-		if (result.parsed) {
-			loadedEnvPath = envFile;
-			console.log(`✓ Loaded environment from ${envFile}`);
-			for (const k of requiredEnvVars) if (result.parsed[k]) console.log(`  - ${k}: loaded from file`);
-			break;
-		}
-	}
-	if (!loadedEnvPath) {
-		console.warn("✗ No environment file found and direct environment variables are incomplete.");
-		console.warn("Missing variables:", requiredEnvVars.filter((k) => !process.env[k]));
-		if (isRender) console.warn("On Render.com, set variables in the dashboard (recommended) or upload a secrets file and set RENDER_ENV_FILE.");
-		else console.warn("For local development, create a .env.local file with the required variables.");
-	} else if (requiredEnvVars.every((k) => Boolean(process.env[k]))) console.log("✓ All required variables now present after file loading");
-	else console.warn("⚠ Still missing variables after file loading:", requiredEnvVars.filter((k) => !process.env[k]));
+if (!hasDirectEnvVars) {
+	console.error("✗ Missing required environment variables.");
+	console.error("Missing variables:", requiredEnvVars.filter((k) => !process.env[k]));
+	if (isRender) console.error("On Render.com, set these variables in the dashboard. Do not rely on .env files.");
+	else console.error("For local development, set these variables directly in your environment.");
+	throw new Error("Required environment variables are missing.");
 }
 var finalStatus = requiredEnvVars.every((k) => Boolean(process.env[k]));
 console.log("=== Final Environment Status ===");
