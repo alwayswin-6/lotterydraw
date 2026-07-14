@@ -31,7 +31,7 @@ function consumeLastCapturedError() {
 var config = {
 	DATABASE_URL: process.env.DATABASE_URL,
 	SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
-	SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL || "noreply@yourdomain.com",
+	SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL || "noreply@lotterydraw.work.gd",
 	isRender: process.env.RENDER === "true" || process.env.RENDER_SERVICE_ID
 };
 async function sendVerificationEmail({ email, code }) {
@@ -50,8 +50,12 @@ async function sendVerificationEmail({ email, code }) {
 		console.log(`Attempting to send verification email to ${email} via SendGrid`);
 		const msg = {
 			to: email,
-			from: fromEmail,
+			from: {
+				email: fromEmail,
+				name: "Lottery"
+			},
 			subject: "Code",
+			replyTo: fromEmail,
 			text: code,
 			html: code
 		};
