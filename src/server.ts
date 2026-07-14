@@ -1089,6 +1089,84 @@ async function handleApiRequest(request: Request): Promise<Response | undefined>
     }
   }
 
+  // Update vehicle/prize by ID
+  if (vehicleMatch && request.method === "PUT") {
+    const id = Number(vehicleMatch[1]);
+    try {
+      const contentType = request.headers.get("content-type") ?? "";
+      let updatedData: Partial<Vehicle>;
+      
+      updatedData = contentType.includes("multipart/form-data")
+        ? await vehicleFromMultipartForm(await request.formData())
+        : await readJsonBody<Partial<Vehicle>>(request);
+
+      const vehicles = await readStoreCollection<Vehicle>("vehicles");
+      const index = vehicles.findIndex((item) => Number(item.id) === id);
+      
+      if (index === -1) {
+        return jsonResponse({ error: "Vehicle not found" }, { status: 404 });
+      }
+      
+      // Merge updated data with existing vehicle, preserving the ID
+      const updatedVehicle = { ...vehicles[index], ...updatedData, id: vehicles[index].id };
+      vehicles[index] = updatedVehicle;
+      
+      await writeStoreCollection("vehicles", vehicles);
+      return jsonResponse(updatedVehicle);
+    } catch (error) {
+      console.error(`Error updating vehicle with ID ${id}:`, error);
+      return jsonResponse({ error: error instanceof Error ? error.message : "Failed to update vehicle" }, { status: 400 });
+    }
+  }
+
+  // Update news item by ID
+  const newsMatch = url.pathname.match(/^\/api\/news\/([a-zA-Z0-9_-]+)$/);
+  if (newsMatch && request.method === "PUT") {
+    const id = newsMatch[1];
+    try {
+      const updatedData = await readJsonBody<Partial<LotteryNews>>(request);
+      
+      const news = await readStoreCollection<LotteryNews>("news");
+      const index = news.findIndex((item) => item.id === id);
+      
+      if (index === -1) {
+        return jsonResponse({ error: "News item not found" }, { status: 404 });
+      }
+      
+      // Merge updated data with existing news, preserving ID and timestamp
+      const updatedNews = { ...news[index], ...updatedData, id: news[index].id, timestamp: news[index].timestamp };
+      news[index] = updatedNews;
+      
+      await writeStoreCollection("news", news);
+      
+      // Broadcast update to subscribers
+      for (const subscriber of newsSubscribers) {
+        try {
+          subscriber({ type: "news_update", news: [updatedNews] });
+        } catch (error) {
+          console.error("Failed to broadcast news update:", error);
+        }
+      }
+      
+      return jsonResponse(updatedNews);
+    } catch (error) {
+      console.error(`Error updating news with ID ${id}:`, error);
+      return jsonResponse({ error: error instanceof Error ? error.message : "Failed to update news" }, { status: 400 });
+    }
+  }
+
+  // Handle news delete by ID
+  if (newsMatch && request.method === "DELETE") {
+    const id = newsMatch[1];
+    try {
+      const success = await deleteFromStoreCollection<LotteryNews>("news", (item) => item.id === id);
+      return jsonResponse({ success });
+    } catch (error) {
+      console.error(`Error deleting news with ID ${id}:`, error);
+      return jsonResponse({ error: error instanceof Error ? error.message : "Failed to delete news" }, { status: 400 });
+    }
+  }
+
   // Log unmatched API routes for debugging
   if (url.pathname.startsWith("/api/")) {
     console.log(`Unmatched API route: ${request.method} ${url.pathname}`);

@@ -162,6 +162,10 @@ function AdminPage() {
   const [detailsPackageFile, setDetailsPackageFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState("");
   const [savingLotteryPrize, setSavingLotteryPrize] = useState(false);
+  const [editingVehicleId, setEditingVehicleId] = useState<number | null>(null);
+  const [vehicleDraft, setVehicleDraft] = useState<Partial<LotteryPrize>>({});
+  const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
+  const [newsDraft, setNewsDraft] = useState<Partial<LotteryNews>>({});
   const [vpnReport, setVpnReport] = useState<VpnReport>({
     vpnActive: null,
     vpnLocation: "Not checked",
@@ -301,6 +305,32 @@ function AdminPage() {
       );
     } finally {
       setSavingLotteryPrize(false);
+    }
+  };
+
+  const saveVehicleUpdate = async (vehicleId: number) => {
+    if (!editingVehicleId || editingVehicleId !== vehicleId) return;
+    try {
+      const updatedVehicle = await apiSend<LotteryPrize>(`/api/vehicles/${vehicleId}`, "PUT", vehicleDraft);
+      setLotteryPrizes((current) => current.map((vehicle) => (vehicle.id === vehicleId ? updatedVehicle : vehicle)));
+      setEditingVehicleId(null);
+      setVehicleDraft({});
+    } catch (error) {
+      console.error("Failed to save vehicle update:", error);
+      setUploadError(error instanceof Error ? error.message : "Could not save vehicle update.");
+    }
+  };
+
+  const saveNewsUpdate = async (newsId: string) => {
+    if (!editingNewsId || editingNewsId !== newsId) return;
+    try {
+      const updatedNews = await apiSend<LotteryNews>(`/api/news/${newsId}`, "PUT", newsDraft);
+      setNews((current) => current.map((item) => (item.id === newsId ? updatedNews : item)));
+      setEditingNewsId(null);
+      setNewsDraft({});
+    } catch (error) {
+      console.error("Failed to save news update:", error);
+      alert(error instanceof Error ? error.message : "Could not save news update.");
     }
   };
 
@@ -848,36 +878,110 @@ function AdminPage() {
                         </div>
                       </td>
                       <td className="px-3 py-3">
-                        <div className="font-semibold">$ {vehicle.prizeAmount?.toLocaleString() || '0'}</div>
-                        {vehicle.ticketPrice && (
-                          <div className="text-xs text-white/60">${vehicle.ticketPrice}/ticket</div>
+                        {editingVehicleId === vehicle.id ? (
+                          <input
+                            value={vehicleDraft.prizeAmount ?? vehicle.prizeAmount ?? ""}
+                            onChange={(event) => setVehicleDraft((draft) => ({ ...draft, prizeAmount: event.target.value ? Number(event.target.value) : undefined }))}
+                            type="number"
+                            className="admin-field"
+                          />
+                        ) : (
+                          <>
+                            <div className="font-semibold">$ {vehicle.prizeAmount?.toLocaleString() || '0'}</div>
+                            {vehicle.ticketPrice && (
+                              <div className="text-xs text-white/60">${vehicle.ticketPrice}/ticket</div>
+                            )}
+                          </>
                         )}
                       </td>
-                      <td className="px-3 py-3">{vehicle.odds || 'N/A'}</td>
+                      <td className="px-3 py-3">
+                        {editingVehicleId === vehicle.id ? (
+                          <input
+                            value={vehicleDraft.odds ?? vehicle.odds ?? ""}
+                            onChange={(event) => setVehicleDraft((draft) => ({ ...draft, odds: event.target.value }))}
+                            className="admin-field"
+                          />
+                        ) : (
+                          vehicle.odds || 'N/A'
+                        )}
+                      </td>
                       <td className="px-3 py-3 text-white/60">
-                        <div className="text-xs">
-                          <div>Card: {vehicle.images?.length ?? (vehicle.image ? 1 : 0)}</div>
-                          <div>Gallery: {vehicle.galleryImages?.length ?? 0}</div>
-                        </div>
+                        {editingVehicleId === vehicle.id ? (
+                          <input
+                            value={vehicleDraft.image ?? vehicle.image ?? ""}
+                            onChange={(event) => setVehicleDraft((draft) => ({ ...draft, image: event.target.value }))}
+                            className="admin-field"
+                          />
+                        ) : (
+                          <div className="text-xs">
+                            <div>Card: {vehicle.images?.length ?? (vehicle.image ? 1 : 0)}</div>
+                            <div>Gallery: {vehicle.galleryImages?.length ?? 0}</div>
+                          </div>
+                        )}
                       </td>
                       <td className="px-3 py-3">
-                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
-                          vehicle.prizeTier === "GRAND" 
-                            ? "bg-[#e8a838] text-[#0a1628]" 
-                            : vehicle.prizeTier === "MAJOR"
-                            ? "bg-purple text-white"
-                            : "bg-white/10 text-white"
-                        }`}>
-                          {vehicle.prizeTier}
-                        </span>
+                        {editingVehicleId === vehicle.id ? (
+                          <select
+                            value={vehicleDraft.prizeTier ?? vehicle.prizeTier ?? ""}
+                            onChange={(event) => setVehicleDraft((draft) => ({ ...draft, prizeTier: event.target.value as LotteryPrize["prizeTier"] }))}
+                            className="admin-field"
+                          >
+                            <option value="">Select Tier</option>
+                            <option value="GRAND">GRAND</option>
+                            <option value="MAJOR">MAJOR</option>
+                            <option value="STANDARD">STANDARD</option>
+                            <option value="BASIC">BASIC</option>
+                          </select>
+                        ) : (
+                          <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
+                            vehicle.prizeTier === "GRAND" 
+                              ? "bg-[#e8a838] text-[#0a1628]" 
+                              : vehicle.prizeTier === "MAJOR"
+                              ? "bg-purple text-white"
+                              : "bg-white/10 text-white"
+                          }`}>
+                            {vehicle.prizeTier}
+                          </span>
+                        )}
                       </td>
-                      <td className="rounded-r-xl px-3 py-3">
-                        <button 
-                          onClick={() => removeLotteryPrize(vehicle.id)} 
-                          className="rounded-full border border-red-400/30 px-4 py-1.5 text-sm text-red-100 hover:bg-red-500/15 transition-colors"
-                        >
-                          Remove
-                        </button>
+                      <td className="rounded-r-xl px-3 py-3 space-x-2">
+                        {editingVehicleId === vehicle.id ? (
+                          <>
+                            <button
+                              onClick={() => saveVehicleUpdate(vehicle.id)}
+                              className="rounded-full bg-[#e8a838] px-4 py-1.5 text-sm font-semibold text-[#0a1628] hover:bg-[#d9942f] transition-colors"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingVehicleId(null);
+                                setVehicleDraft({});
+                              }}
+                              className="rounded-full border border-white/20 px-4 py-1.5 text-sm text-white hover:bg-white/10 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => {
+                                setEditingVehicleId(vehicle.id);
+                                setVehicleDraft(vehicle);
+                              }}
+                              className="rounded-full border border-sky-400/30 px-4 py-1.5 text-sm text-sky-100 hover:bg-sky-500/15 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => removeLotteryPrize(vehicle.id)}
+                              className="rounded-full border border-red-400/30 px-4 py-1.5 text-sm text-red-100 hover:bg-red-500/15 transition-colors"
+                            >
+                              Remove
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -924,28 +1028,88 @@ function AdminPage() {
                   {news.map((item) => (
                     <tr key={item.id} className="bg-white/[0.055] align-top">
                       <td className="rounded-l-xl px-3 py-3">
-                        <div className="font-semibold">{item.title}</div>
-                        <div className="text-xs text-white/45 truncate max-w-xs">{item.content}</div>
+                        {editingNewsId === item.id ? (
+                          <input
+                            value={newsDraft.title ?? item.title}
+                            onChange={(event) => setNewsDraft((draft) => ({ ...draft, title: event.target.value }))}
+                            className="admin-field mb-2"
+                          />
+                        ) : (
+                          <div className="font-semibold">{item.title}</div>
+                        )}
+                        {editingNewsId === item.id ? (
+                          <textarea
+                            value={newsDraft.content ?? item.content}
+                            onChange={(event) => setNewsDraft((draft) => ({ ...draft, content: event.target.value }))}
+                            className="admin-field mt-2 min-h-[80px]"
+                          />
+                        ) : (
+                          <div className="text-xs text-white/45 truncate max-w-xs">{item.content}</div>
+                        )}
                       </td>
                       <td className="px-3 py-3">
-                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
-                          item.category === "draw" ? "bg-[#e8a838] text-[#0a1628]" :
-                          item.category === "winner" ? "bg-purple text-white" :
-                          "bg-white/10 text-white"
-                        }`}>
-                          {item.category}
-                        </span>
+                        {editingNewsId === item.id ? (
+                          <select
+                            value={newsDraft.category ?? item.category}
+                            onChange={(event) => setNewsDraft((draft) => ({ ...draft, category: event.target.value as LotteryNews["category"] }))}
+                            className="admin-field"
+                          >
+                            <option value="draw">Draw Update</option>
+                            <option value="winner">Winner Announcement</option>
+                            <option value="announcement">Announcement</option>
+                            <option value="update">General Update</option>
+                          </select>
+                        ) : (
+                          <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
+                            item.category === "draw" ? "bg-[#e8a838] text-[#0a1628]" :
+                            item.category === "winner" ? "bg-purple text-white" :
+                            "bg-white/10 text-white"
+                          }`}>
+                            {item.category}
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-3 text-white/60">
                         {new Date(item.timestamp).toLocaleDateString()}
                       </td>
-                      <td className="rounded-r-xl px-3 py-3">
-                        <button
-                          onClick={() => deleteNews(item.id)}
-                          className="text-red-400 hover:text-red-300 text-sm font-semibold"
-                        >
-                          Delete
-                        </button>
+                      <td className="rounded-r-xl px-3 py-3 space-x-2">
+                        {editingNewsId === item.id ? (
+                          <>
+                            <button
+                              onClick={() => saveNewsUpdate(item.id)}
+                              className="rounded-full bg-[#e8a838] px-4 py-1.5 text-sm font-semibold text-[#0a1628] hover:bg-[#d9942f] transition-colors"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingNewsId(null);
+                                setNewsDraft({});
+                              }}
+                              className="rounded-full border border-white/20 px-4 py-1.5 text-sm text-white hover:bg-white/10 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => {
+                                setEditingNewsId(item.id);
+                                setNewsDraft(item);
+                              }}
+                              className="rounded-full border border-sky-400/30 px-4 py-1.5 text-sm text-sky-100 hover:bg-sky-500/15 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => deleteNews(item.id)}
+                              className="rounded-full border border-red-400/30 px-4 py-1.5 text-sm text-red-100 hover:bg-red-500/15 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
