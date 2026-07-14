@@ -31,16 +31,6 @@ export async function sendVerificationEmail({ email, code }: VerificationEmail) 
       subject: code,
       text: code,
       html: code,
-      headers: {
-        "X-Priority": "3",
-        "X-Mailer": "SendGrid",
-        "Precedence": "bulk"
-      },
-      trackingSettings: {
-        clickTracking: { enabled: false },
-        openTracking: { enabled: false },
-        subscriptionTracking: { enabled: false }
-      }
     };
 
     await sgMail.send(msg);
