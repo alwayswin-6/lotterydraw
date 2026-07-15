@@ -157,6 +157,8 @@ function AdminPage() {
   const [news, setNews] = useState<LotteryNews[]>([]);
   const [visitorCount, setVisitorCount] = useState(0);
   const [downloadCount, setDownloadCount] = useState(0);
+  const [registeredDownloadCount, setRegisteredDownloadCount] = useState(0);
+  const [anonymousDownloadCount, setAnonymousDownloadCount] = useState(0);
   const [cardImageFiles, setCardImageFiles] = useState<SelectedFile[]>([]);
   const [galleryImageFiles, setGalleryImageFiles] = useState<SelectedFile[]>([]);
   const [detailsPackageFile, setDetailsPackageFile] = useState<File | null>(null);
@@ -188,7 +190,11 @@ function AdminPage() {
         apiGet<{ currentActiveVisitors: number; registeredUsers: number; guests: number }>("/api/visitor-count")
           .then(data => setVisitorCount(data.currentActiveVisitors)),
         apiGet<{ totalDownloads: number; registeredDownloads: number; anonymousDownloads: number }>("/api/download-count")
-          .then(data => setDownloadCount(data.totalDownloads))
+          .then(data => {
+            setDownloadCount(data.totalDownloads);
+            setRegisteredDownloadCount(data.registeredDownloads);
+            setAnonymousDownloadCount(data.anonymousDownloads);
+          })
       ]).catch(console.error);
     }, 10000); // Update every 10 seconds
     
@@ -218,6 +224,8 @@ function AdminPage() {
     try {
       const downloadData = await apiGet<{ totalDownloads: number; registeredDownloads: number; anonymousDownloads: number }>("/api/download-count");
       setDownloadCount(downloadData.totalDownloads);
+      setRegisteredDownloadCount(downloadData.registeredDownloads);
+      setAnonymousDownloadCount(downloadData.anonymousDownloads);
     } catch (error) {
       console.error(error);
       // Don't show error for download count, just default to 0
@@ -505,13 +513,19 @@ function AdminPage() {
         <div className="admin-shell-header flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="text-xs font-bold uppercase tracking-[0.3em] text-[#b87913]">Administrator</div>
-            <div className="mt-2 flex items-center gap-3">
+            <div className="mt-2 flex flex-wrap items-center gap-3">
               <h1 className="font-display text-4xl font-bold">Linz Control Room</h1>
               <div className="rounded-full bg-[#e8a838] px-4 py-1 text-sm font-bold text-[#0a1628]">
                 {visitorCount} Visitors
               </div>
               <div className="rounded-full bg-[#172033] px-4 py-1 text-sm font-bold text-white">
                 {downloadCount} Downloads
+              </div>
+              <div className="rounded-full bg-[#0a1628] px-4 py-1 text-sm font-bold text-white">
+                {registeredDownloadCount} Registered
+              </div>
+              <div className="rounded-full bg-[#4b5563] px-4 py-1 text-sm font-bold text-white">
+                {anonymousDownloadCount} Anonymous
               </div>
             </div>
           </div>

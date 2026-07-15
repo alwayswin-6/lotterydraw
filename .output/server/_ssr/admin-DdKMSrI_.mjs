@@ -3,7 +3,7 @@ import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tan
 import { d as Outlet } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as apiSend, t as apiGet } from "./api-fWyQh8tb.mjs";
 import { o as motion } from "../_libs/framer-motion.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin-B98dTXtb.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin-DdKMSrI_.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var CURRENT_USER_KEY = "linz-current-user";
@@ -53,6 +53,8 @@ function AdminPage() {
 	const [news, setNews] = (0, import_react.useState)([]);
 	const [visitorCount, setVisitorCount] = (0, import_react.useState)(0);
 	const [downloadCount, setDownloadCount] = (0, import_react.useState)(0);
+	const [registeredDownloadCount, setRegisteredDownloadCount] = (0, import_react.useState)(0);
+	const [anonymousDownloadCount, setAnonymousDownloadCount] = (0, import_react.useState)(0);
 	const [cardImageFiles, setCardImageFiles] = (0, import_react.useState)([]);
 	const [galleryImageFiles, setGalleryImageFiles] = (0, import_react.useState)([]);
 	const [detailsPackageFile, setDetailsPackageFile] = (0, import_react.useState)(null);
@@ -76,7 +78,11 @@ function AdminPage() {
 		setAllowed(true);
 		refreshData();
 		const refreshInterval = setInterval(() => {
-			Promise.all([apiGet("/api/visitor-count").then((data) => setVisitorCount(data.currentActiveVisitors)), apiGet("/api/download-count").then((data) => setDownloadCount(data.totalDownloads))]).catch(console.error);
+			Promise.all([apiGet("/api/visitor-count").then((data) => setVisitorCount(data.currentActiveVisitors)), apiGet("/api/download-count").then((data) => {
+				setDownloadCount(data.totalDownloads);
+				setRegisteredDownloadCount(data.registeredDownloads);
+				setAnonymousDownloadCount(data.anonymousDownloads);
+			})]).catch(console.error);
 		}, 1e4);
 		return () => clearInterval(refreshInterval);
 	}, []);
@@ -102,6 +108,8 @@ function AdminPage() {
 		try {
 			const downloadData = await apiGet("/api/download-count");
 			setDownloadCount(downloadData.totalDownloads);
+			setRegisteredDownloadCount(downloadData.registeredDownloads);
+			setAnonymousDownloadCount(downloadData.anonymousDownloads);
 		} catch (error) {
 			console.error(error);
 		}
@@ -362,7 +370,7 @@ function AdminPage() {
 							className: "text-xs font-bold uppercase tracking-[0.3em] text-[#b87913]",
 							children: "Administrator"
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "mt-2 flex items-center gap-3",
+							className: "mt-2 flex flex-wrap items-center gap-3",
 							children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
 									className: "font-display text-4xl font-bold",
@@ -375,6 +383,14 @@ function AdminPage() {
 								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 									className: "rounded-full bg-[#172033] px-4 py-1 text-sm font-bold text-white",
 									children: [downloadCount, " Downloads"]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "rounded-full bg-[#0a1628] px-4 py-1 text-sm font-bold text-white",
+									children: [registeredDownloadCount, " Registered"]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "rounded-full bg-[#4b5563] px-4 py-1 text-sm font-bold text-white",
+									children: [anonymousDownloadCount, " Anonymous"]
 								})
 							]
 						})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {

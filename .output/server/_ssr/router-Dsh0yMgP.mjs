@@ -4,10 +4,10 @@ import { c as HeadContent, d as Outlet, f as lazyRouteComponent, g as useRouter,
 import { t as Route$3 } from "../_email-DdcBAK-g.mjs";
 import { t as Route$4 } from "../_id-D3luYzWG.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-bm8Rdjy1.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-Dsh0yMgP.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-CzAXMQWL.css";
+var styles_default = "/assets/styles-BiNp1EoR.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {
@@ -283,7 +283,7 @@ function RootComponent() {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {})
 	});
 }
-var $$splitComponentImporter$1 = () => import("./admin-B98dTXtb.mjs");
+var $$splitComponentImporter$1 = () => import("./admin-DdKMSrI_.mjs");
 var Route$1 = createFileRoute("/admin")({ component: lazyRouteComponent($$splitComponentImporter$1, "component") });
 var $$splitComponentImporter = () => import("./routes-Dmph24TR.mjs");
 var Route = createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter, "component") });

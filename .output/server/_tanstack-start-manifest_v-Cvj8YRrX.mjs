@@ -1,4 +1,4 @@
-//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-Cddt6SVS.js
+//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-Cvj8YRrX.js
 var tsrStartManifest = () => ({ routes: {
 	__root__: {
 		filePath: "F:/work/lottery/lotterydraw/src/routes/__root.tsx",
@@ -8,21 +8,21 @@ var tsrStartManifest = () => ({ routes: {
 			"/vehicles/$id"
 		],
 		preloads: [
-			"/assets/index-DvIkdKED.js",
+			"/assets/index-COMJLcb1.js",
 			"/assets/rolldown-runtime-CNC7AqOf.js",
 			"/assets/jsx-runtime-CaR_m4Xc.js"
 		],
 		scripts: [{ attrs: {
 			type: "module",
 			async: !0,
-			src: "/assets/index-DvIkdKED.js"
+			src: "/assets/index-COMJLcb1.js"
 		} }]
 	},
 	"/": {
 		filePath: "F:/work/lottery/lotterydraw/src/routes/index.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/routes-DAwWP3vL.js",
+			"/assets/routes-C9f3RpAw.js",
 			"/assets/proxy-BPUov0s-.js",
 			"/assets/api-D0_P4wlt.js"
 		]
@@ -31,7 +31,7 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "F:/work/lottery/lotterydraw/src/routes/admin.tsx",
 		children: ["/admin/users/$email"],
 		preloads: [
-			"/assets/admin-MVTa2XiB.js",
+			"/assets/admin-lcJvI_sg.js",
 			"/assets/proxy-BPUov0s-.js",
 			"/assets/api-D0_P4wlt.js"
 		]
@@ -39,12 +39,12 @@ var tsrStartManifest = () => ({ routes: {
 	"/vehicles/$id": {
 		filePath: "F:/work/lottery/lotterydraw/src/routes/vehicles/$id.tsx",
 		children: void 0,
-		preloads: ["/assets/_id-C1Ggbmv1.js", "/assets/api-D0_P4wlt.js"]
+		preloads: ["/assets/_id-B4pjPp_J.js", "/assets/api-D0_P4wlt.js"]
 	},
 	"/admin/users/$email": {
 		filePath: "F:/work/lottery/lotterydraw/src/routes/admin/users/$email.tsx",
 		children: void 0,
-		preloads: ["/assets/_email-Bp4yhqJG.js"]
+		preloads: ["/assets/_email-D4AT6Q7X.js"]
 	}
 } });
 //#endregion
