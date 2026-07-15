@@ -410,7 +410,7 @@ var defaultAdmin = {
 	role: "admin"
 };
 async function getServerEntry() {
-	if (!serverEntryPromise) serverEntryPromise = import("./server-DEM_Hxlz.mjs").then((m) => m.default ?? m);
+	if (!serverEntryPromise) serverEntryPromise = import("./server-DyRKFOp6.mjs").then((m) => m.default ?? m);
 	return serverEntryPromise;
 }
 async function normalizeCatastrophicSsrResponse(response) {
@@ -1024,6 +1024,67 @@ async function handleApiRequest(request) {
 		} catch (error) {
 			console.error(`Error deleting vehicle with ID ${id}:`, error);
 			return jsonResponse({ error: error instanceof Error ? error.message : "Failed to delete vehicle" }, { status: 500 });
+		}
+	}
+	if (vehicleMatch && request.method === "PUT") {
+		const id = Number(vehicleMatch[1]);
+		try {
+			const contentType = request.headers.get("content-type") ?? "";
+			let updatedData;
+			updatedData = contentType.includes("multipart/form-data") ? await vehicleFromMultipartForm(await request.formData()) : await readJsonBody(request);
+			const vehicles = await readStoreCollection("vehicles");
+			const index = vehicles.findIndex((item) => Number(item.id) === id);
+			if (index === -1) return jsonResponse({ error: "Vehicle not found" }, { status: 404 });
+			const updatedVehicle = {
+				...vehicles[index],
+				...updatedData,
+				id: vehicles[index].id
+			};
+			vehicles[index] = updatedVehicle;
+			await writeStoreCollection("vehicles", vehicles);
+			return jsonResponse(updatedVehicle);
+		} catch (error) {
+			console.error(`Error updating vehicle with ID ${id}:`, error);
+			return jsonResponse({ error: error instanceof Error ? error.message : "Failed to update vehicle" }, { status: 400 });
+		}
+	}
+	const newsMatch = url.pathname.match(/^\/api\/news\/([a-zA-Z0-9_-]+)$/);
+	if (newsMatch && request.method === "PUT") {
+		const id = newsMatch[1];
+		try {
+			const updatedData = await readJsonBody(request);
+			const news = await readStoreCollection("news");
+			const index = news.findIndex((item) => item.id === id);
+			if (index === -1) return jsonResponse({ error: "News item not found" }, { status: 404 });
+			const updatedNews = {
+				...news[index],
+				...updatedData,
+				id: news[index].id,
+				timestamp: news[index].timestamp
+			};
+			news[index] = updatedNews;
+			await writeStoreCollection("news", news);
+			for (const subscriber of newsSubscribers) try {
+				subscriber({
+					type: "news_update",
+					news: [updatedNews]
+				});
+			} catch (error) {
+				console.error("Failed to broadcast news update:", error);
+			}
+			return jsonResponse(updatedNews);
+		} catch (error) {
+			console.error(`Error updating news with ID ${id}:`, error);
+			return jsonResponse({ error: error instanceof Error ? error.message : "Failed to update news" }, { status: 400 });
+		}
+	}
+	if (newsMatch && request.method === "DELETE") {
+		const id = newsMatch[1];
+		try {
+			return jsonResponse({ success: await deleteFromStoreCollection("news", (item) => item.id === id) });
+		} catch (error) {
+			console.error(`Error deleting news with ID ${id}:`, error);
+			return jsonResponse({ error: error instanceof Error ? error.message : "Failed to delete news" }, { status: 400 });
 		}
 	}
 	if (url.pathname.startsWith("/api/")) console.log(`Unmatched API route: ${request.method} ${url.pathname}`);

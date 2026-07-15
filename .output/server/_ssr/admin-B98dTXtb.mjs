@@ -3,7 +3,7 @@ import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tan
 import { d as Outlet } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as apiSend, t as apiGet } from "./api-fWyQh8tb.mjs";
 import { o as motion } from "../_libs/framer-motion.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin-B_76VnjO.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin-B98dTXtb.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var CURRENT_USER_KEY = "linz-current-user";
@@ -58,6 +58,10 @@ function AdminPage() {
 	const [detailsPackageFile, setDetailsPackageFile] = (0, import_react.useState)(null);
 	const [uploadError, setUploadError] = (0, import_react.useState)("");
 	const [savingLotteryPrize, setSavingLotteryPrize] = (0, import_react.useState)(false);
+	const [editingVehicleId, setEditingVehicleId] = (0, import_react.useState)(null);
+	const [vehicleDraft, setVehicleDraft] = (0, import_react.useState)({});
+	const [editingNewsId, setEditingNewsId] = (0, import_react.useState)(null);
+	const [newsDraft, setNewsDraft] = (0, import_react.useState)({});
 	const [vpnReport, setVpnReport] = (0, import_react.useState)({
 		vpnActive: null,
 		vpnLocation: "Not checked",
@@ -168,6 +172,30 @@ function AdminPage() {
 			setUploadError(isStorageQuotaError(error) ? "The prize was not saved because browser storage is full. Try fewer images, smaller images, or remove an old prize first." : error instanceof Error ? error.message : "The prize was not saved because the selected files could not be processed. Try different image files.");
 		} finally {
 			setSavingLotteryPrize(false);
+		}
+	};
+	const saveVehicleUpdate = async (vehicleId) => {
+		if (!editingVehicleId || editingVehicleId !== vehicleId) return;
+		try {
+			const updatedVehicle = await apiSend(`/api/vehicles/${vehicleId}`, "PUT", vehicleDraft);
+			setLotteryPrizes((current) => current.map((vehicle) => vehicle.id === vehicleId ? updatedVehicle : vehicle));
+			setEditingVehicleId(null);
+			setVehicleDraft({});
+		} catch (error) {
+			console.error("Failed to save vehicle update:", error);
+			setUploadError(error instanceof Error ? error.message : "Could not save vehicle update.");
+		}
+	};
+	const saveNewsUpdate = async (newsId) => {
+		if (!editingNewsId || editingNewsId !== newsId) return;
+		try {
+			const updatedNews = await apiSend(`/api/news/${newsId}`, "PUT", newsDraft);
+			setNews((current) => current.map((item) => item.id === newsId ? updatedNews : item));
+			setEditingNewsId(null);
+			setNewsDraft({});
+		} catch (error) {
+			console.error("Failed to save news update:", error);
+			alert(error instanceof Error ? error.message : "Could not save news update.");
 		}
 	};
 	const addCardImages = (files) => {
@@ -1036,9 +1064,17 @@ function AdminPage() {
 													})] })]
 												})
 											}),
-											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
 												className: "px-3 py-3",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												children: editingVehicleId === vehicle.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+													value: vehicleDraft.prizeAmount ?? vehicle.prizeAmount ?? "",
+													onChange: (event) => setVehicleDraft((draft) => ({
+														...draft,
+														prizeAmount: event.target.value ? Number(event.target.value) : void 0
+													})),
+													type: "number",
+													className: "admin-field"
+												}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 													className: "font-semibold",
 													children: ["$ ", vehicle.prizeAmount?.toLocaleString() || "0"]
 												}), vehicle.ticketPrice && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -1048,33 +1084,94 @@ function AdminPage() {
 														vehicle.ticketPrice,
 														"/ticket"
 													]
-												})]
+												})] })
 											}),
 											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
 												className: "px-3 py-3",
-												children: vehicle.odds || "N/A"
+												children: editingVehicleId === vehicle.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+													value: vehicleDraft.odds ?? vehicle.odds ?? "",
+													onChange: (event) => setVehicleDraft((draft) => ({
+														...draft,
+														odds: event.target.value
+													})),
+													className: "admin-field"
+												}) : vehicle.odds || "N/A"
 											}),
 											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
 												className: "px-3 py-3 text-white/60",
-												children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												children: editingVehicleId === vehicle.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+													value: vehicleDraft.image ?? vehicle.image ?? "",
+													onChange: (event) => setVehicleDraft((draft) => ({
+														...draft,
+														image: event.target.value
+													})),
+													className: "admin-field"
+												}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 													className: "text-xs",
 													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: ["Card: ", vehicle.images?.length ?? (vehicle.image ? 1 : 0)] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: ["Gallery: ", vehicle.galleryImages?.length ?? 0] })]
 												})
 											}),
 											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
 												className: "px-3 py-3",
-												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												children: editingVehicleId === vehicle.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+													value: vehicleDraft.prizeTier ?? vehicle.prizeTier ?? "",
+													onChange: (event) => setVehicleDraft((draft) => ({
+														...draft,
+														prizeTier: event.target.value
+													})),
+													className: "admin-field",
+													children: [
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "",
+															children: "Select Tier"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "GRAND",
+															children: "GRAND"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "MAJOR",
+															children: "MAJOR"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "STANDARD",
+															children: "STANDARD"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "BASIC",
+															children: "BASIC"
+														})
+													]
+												}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 													className: `inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${vehicle.prizeTier === "GRAND" ? "bg-[#e8a838] text-[#0a1628]" : vehicle.prizeTier === "MAJOR" ? "bg-purple text-white" : "bg-white/10 text-white"}`,
 													children: vehicle.prizeTier
 												})
 											}),
 											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
-												className: "rounded-r-xl px-3 py-3",
-												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												className: "rounded-r-xl px-3 py-3 space-x-2",
+												children: editingVehicleId === vehicle.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													onClick: () => saveVehicleUpdate(vehicle.id),
+													className: "rounded-full bg-[#e8a838] px-4 py-1.5 text-sm font-semibold text-[#0a1628] hover:bg-[#d9942f] transition-colors",
+													children: "Save"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													onClick: () => {
+														setEditingVehicleId(null);
+														setVehicleDraft({});
+													},
+													className: "rounded-full border border-white/20 px-4 py-1.5 text-sm text-white hover:bg-white/10 transition-colors",
+													children: "Cancel"
+												})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													onClick: () => {
+														setEditingVehicleId(vehicle.id);
+														setVehicleDraft(vehicle);
+													},
+													className: "rounded-full border border-sky-400/30 px-4 py-1.5 text-sm text-sky-100 hover:bg-sky-500/15 transition-colors",
+													children: "Edit"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 													onClick: () => removeLotteryPrize(vehicle.id),
 													className: "rounded-full border border-red-400/30 px-4 py-1.5 text-sm text-red-100 hover:bg-red-500/15 transition-colors",
 													children: "Remove"
-												})
+												})] })
 											})
 										]
 									}, vehicle.id)) })]
@@ -1171,17 +1268,56 @@ function AdminPage() {
 										children: [
 											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
 												className: "rounded-l-xl px-3 py-3",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												children: [editingNewsId === item.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+													value: newsDraft.title ?? item.title,
+													onChange: (event) => setNewsDraft((draft) => ({
+														...draft,
+														title: event.target.value
+													})),
+													className: "admin-field mb-2"
+												}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 													className: "font-semibold",
 													children: item.title
-												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												}), editingNewsId === item.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
+													value: newsDraft.content ?? item.content,
+													onChange: (event) => setNewsDraft((draft) => ({
+														...draft,
+														content: event.target.value
+													})),
+													className: "admin-field mt-2 min-h-[80px]"
+												}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 													className: "text-xs text-white/45 truncate max-w-xs",
 													children: item.content
 												})]
 											}),
 											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
 												className: "px-3 py-3",
-												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												children: editingNewsId === item.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+													value: newsDraft.category ?? item.category,
+													onChange: (event) => setNewsDraft((draft) => ({
+														...draft,
+														category: event.target.value
+													})),
+													className: "admin-field",
+													children: [
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "draw",
+															children: "Draw Update"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "winner",
+															children: "Winner Announcement"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "announcement",
+															children: "Announcement"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "update",
+															children: "General Update"
+														})
+													]
+												}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 													className: `inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${item.category === "draw" ? "bg-[#e8a838] text-[#0a1628]" : item.category === "winner" ? "bg-purple text-white" : "bg-white/10 text-white"}`,
 													children: item.category
 												})
@@ -1191,12 +1327,30 @@ function AdminPage() {
 												children: new Date(item.timestamp).toLocaleDateString()
 											}),
 											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
-												className: "rounded-r-xl px-3 py-3",
-												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												className: "rounded-r-xl px-3 py-3 space-x-2",
+												children: editingNewsId === item.id ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													onClick: () => saveNewsUpdate(item.id),
+													className: "rounded-full bg-[#e8a838] px-4 py-1.5 text-sm font-semibold text-[#0a1628] hover:bg-[#d9942f] transition-colors",
+													children: "Save"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													onClick: () => {
+														setEditingNewsId(null);
+														setNewsDraft({});
+													},
+													className: "rounded-full border border-white/20 px-4 py-1.5 text-sm text-white hover:bg-white/10 transition-colors",
+													children: "Cancel"
+												})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													onClick: () => {
+														setEditingNewsId(item.id);
+														setNewsDraft(item);
+													},
+													className: "rounded-full border border-sky-400/30 px-4 py-1.5 text-sm text-sky-100 hover:bg-sky-500/15 transition-colors",
+													children: "Edit"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 													onClick: () => deleteNews(item.id),
-													className: "text-red-400 hover:text-red-300 text-sm font-semibold",
+													className: "rounded-full border border-red-400/30 px-4 py-1.5 text-sm text-red-100 hover:bg-red-500/15 transition-colors",
 													children: "Delete"
-												})
+												})] })
 											})
 										]
 									}, item.id)) })]
