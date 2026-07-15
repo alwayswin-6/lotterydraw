@@ -85,16 +85,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Your chance to win incredible prizes! Join the Linz Lottery and drive away with luxury vehicles and amazing rewards." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://your-domain.com" },
-      { property: "og:image", content: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200&h=630&fit=crop" },
+      { property: "og:image", content: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&h=630&fit=crop" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "Luxury car lottery prizes" },
+      { property: "og:image:alt", content: "Lottery draw balls and jackpot celebration" },
       
       // Twitter Card tags
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Linz Lottery - Win Amazing Prizes" },
       { name: "twitter:description", content: "Your chance to win incredible prizes! Join the Linz Lottery and drive away with luxury vehicles and amazing rewards." },
-      { name: "twitter:image", content: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200&h=630&fit=crop" },
+      { name: "twitter:image", content: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&h=630&fit=crop" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
